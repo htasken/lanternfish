@@ -17,3 +17,7 @@ __pycache__/
 
 # Conda enviroments 
 env/
+
+# Generated files
+.server.pid
+.server_users.pid
