@@ -71,9 +71,10 @@ class LLM:
             with open(self.server_pid_file, "w") as f:
                 f.write(str(process.pid))
             time.sleep(3)
-        logging.debug("Pulling Ollama model.")
         client = ollama.Client(host=self.server_url)
-        client.pull(model=self.model)
+        if not any(model.model.startswith(self.model) for model in client.list().models):
+            logging.warning(f"Downloading the Ollama model {self.model}. This may take a while...")
+            client.pull(model=self.model)
 
     def _stop_ollama_server(self):
         logging.info("Stopping Ollama server.")

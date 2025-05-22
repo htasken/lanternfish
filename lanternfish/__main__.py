@@ -9,8 +9,8 @@ import logging
 
 def command_line_arguments(args=None):
     parser = argparse.ArgumentParser(description="Lanternfish is a LLM research assistant that helps search through large amounts of research papers.")
-    parser.add_argument('-p', '--prompt', type=str, 
-        help="Description of what you want to find the research litterature. For example: 'Find resent papers using LLM's to help with cancer screening'.")
+    parser.add_argument('-p', '--prompt', type=str, required=True, 
+        help="<Required> Description of what you want to find the research litterature. For example: 'Find resent papers using LLM's to help with cancer screening'.")
     parser.add_argument('-w', '--webinterface', action='store_true',
         help="Run the tool as a webserver with a user-friendly interface.")
     parser.add_argument('-m', '--model', default='llama3.1', type=str,
@@ -34,10 +34,11 @@ def main(args=None):
     args = command_line_arguments(args)
     logging.basicConfig(level=args.logging_level)
 
-    # Get results from Google Scholar
     papers = google_scholar.search(args.prompt, args.model, args.max_papers_evaluated)
 
-    # Check relevance of abstracts
+    # Check relevance of abstracts and remove irrelevant papers
+
+    # Download the papers
 
     # Get relevance score of the full papers
 
@@ -45,7 +46,9 @@ def main(args=None):
 
     # Give the papers a quality score
 
-    # Produce summaries of the papers
+    # Produce summaries of the papers with respect to the prompt
+
+    # Generate a final report 
     
 if __name__ == "__main__":
     main()
