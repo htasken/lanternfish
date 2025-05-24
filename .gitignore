@@ -1,5 +1,5 @@
 # Ignore environment files and secrets
-.env
+# .env
 
 # Ignore Python cache and compiled files
 __pycache__/

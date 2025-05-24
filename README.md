@@ -21,7 +21,7 @@ If you have homebrew in a mac installed you can just do `$ brew install uv`
 
 To run any python file with the dependencies installed:
 
-`$ uv run lanternfish/llm.py`
+`$ uv run --env-file .env_ollama lanternfish/llm_client.py`
 
 ## Add dependencies
 
