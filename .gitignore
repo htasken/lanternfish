@@ -1,23 +1,13 @@
-# Ignore environment files and secrets
-# .env
-
-# Ignore Python cache and compiled files
 __pycache__/
 *.pyc
 
-# Ignore Jupyter notebook checkpoints
-.ipynb_checkpoints/
-
-# Ignore temp files
 *.swp
 *.tmp
 
-# Ignore system files
 .DS_Store
 
-# Conda enviroments 
 env/
+.venv/
 
-# Generated files
 .server.pid
 .server_users.pid
