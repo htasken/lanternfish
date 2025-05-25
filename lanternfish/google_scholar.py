@@ -8,14 +8,18 @@ def search(prompt, max_n_papers=50):
 
     search_results = []
 
-    logging.info(f"Searching Google Scholar for {len(search_results)} papers")
+    logging.info(f"Searching Google Scholar for at most {max_n_papers} papers")
     
     papers = scholarly.search_pubs(search_queries)
-    logging.info(f"Found {len(papers)} papers")
-    for paper in papers[:max_n_papers]:
+    
+    for paper in papers:
         if paper not in search_results:
             search_results.append(paper)
+        if len(search_results) >= max_n_papers:
+            break
 
+    logging.info(f"Found {len(search_results)} papers")
+    
     return search_results
 
 if __name__ == "__main__":

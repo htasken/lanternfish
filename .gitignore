@@ -11,3 +11,5 @@ env/
 
 .server.pid
 .server_users.pid
+
+lanternfish/test.py
