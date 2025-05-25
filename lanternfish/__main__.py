@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """Lanternfish command line tool's entry point."""
 
-from . import llm_api
-from . import google_scholar
+import llm_api
+import google_scholar
 import argparse
 import logging
 

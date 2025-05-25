@@ -1,6 +1,6 @@
-from .llm_client import AsyncLLMClient
+from llm_client import AsyncLLMClient
 import asyncio
-from .prompts import SYSTEM_GENERATE_QUERIES
+from prompts import SYSTEM_GENERATE_QUERIES
 
 
 llm_client = AsyncLLMClient()

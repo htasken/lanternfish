@@ -1,5 +1,5 @@
 
-from .llm_api import generate_search_prompts
+from llm_api import generate_search_prompts
 from scholarly import scholarly
 import logging
 
