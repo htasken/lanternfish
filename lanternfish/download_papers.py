@@ -3,7 +3,7 @@ import requests
 import arxiv
 from thefuzz import fuzz
 
-def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers"):
+def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers", verbose = False):
     safe_title = "".join(c if c.isalnum() else "_" for c in title)[:100]
     filepath = os.path.join(folder, f"{safe_title}.pdf")
 
@@ -16,21 +16,23 @@ def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers"):
 
         content_type = response.headers.get('Content-Type', '')
         if "pdf" not in content_type.lower():
-            print(f"URL does not point to a PDF: {pdf_url}")
+            if verbose:
+                print(f"URL does not point to a PDF: {pdf_url}")
             return None
 
         with open(filepath, "wb") as f:
             f.write(response.content)
 
-        print(f"Downloaded: {title}\n")
+        if verbose:
+            print(f"Downloaded")
         return filepath
 
     except Exception as e:
-        print(f"Failed to download {title} from {pdf_url}: {e}\n")
+        print(f"Failed to download from {pdf_url}: {e}")
         return None
 
 
-def download_from_arxiv(title, folder="lanternfish/papers", similarity_threshold=80):
+def download_from_arxiv(title, folder="lanternfish/papers", similarity_threshold=80, verbose = False):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -46,20 +48,24 @@ def download_from_arxiv(title, folder="lanternfish/papers", similarity_threshold
         for result in client.results(search):
             arxiv_title = result.title
             similarity = fuzz.token_set_ratio(title.lower(), arxiv_title.lower())
-            print(f"Comparing titles:\n  Original: {title}\n  arXiv:    {arxiv_title}\n  Similarity: {similarity}%")
+            if verbose:
+                print(f"Comparing titles:\n  Original: {title}\n  arXiv:    {arxiv_title}\n  Similarity: {similarity}%")
 
             if similarity >= similarity_threshold:
                 pdf_url = result.pdf_url
-                print(f"Title similarity {similarity}% >= {similarity_threshold}%. Downloading {arxiv_title}")
+                if verbose:
+                    print(f"Title similarity {similarity}% >= {similarity_threshold}%.")
                 return download_pdf_from_url(pdf_url, title, folder)
 
-        print(f"No arXiv papers matched the title with similarity >= {similarity_threshold}%")
+        if verbose:
+            print(f"No arXiv papers matched the title with similarity >= {similarity_threshold}%")
     except Exception as e:
-        print(f"Arxiv download failed for {title}: {e}")
-    return None
+        if verbose:
+            print(f"arXiv download failed for {title}: {e}")
+        return None
 
 
-def download_paper(paper, folder="lanternfish/papers"):
+def download_paper(paper, folder="lanternfish/papers", verbose = False):
     """
     Wrapper function to try Google Scholar eprint_url first, then fallback to arXiv search if needed.
     """
@@ -67,16 +73,20 @@ def download_paper(paper, folder="lanternfish/papers"):
     url = paper.get('eprint_url', None)
 
     if url:
-        print(f"Trying direct download for paper: {title}")
-        filepath = download_pdf_from_url(url, title, folder)
+        if verbose:
+            print(f"Trying direct download")
+        filepath = download_pdf_from_url(url, title, folder, verbose = verbose)
         if filepath is not None:
             return filepath
         else:
-            print(f"Direct download failed.")
-            return download_from_arxiv(title, folder)
+            if verbose:
+                print(f"Direct download failed")
+                print(f"Trying arXiv download")
+            return download_from_arxiv(title, folder, verbose = verbose)
     else:
-        print(f"Trying arXiv for {title}")
-        return download_from_arxiv(title, folder)
+        if verbose:
+            print(f"Trying arXiv download")
+        return download_from_arxiv(title, folder, verbose = verbose)
 
 
 if __name__=="__main__":
@@ -94,5 +104,20 @@ if __name__=="__main__":
                     # Not directly downloadable and not found in arXiv
                     ]
     
-    for paper in papers_example:
-        download_paper(paper)
+    successful_downloads = 0
+    download_attempts = len(papers_example)
+
+    print("Downloading papers")
+
+    for i, paper in enumerate(papers_example):
+        print(f"\nAttempting to download paper {i+1}/{download_attempts}: {paper['bib']['title']}")
+        successful = download_paper(paper, verbose=True)
+        if successful is not None:
+            print("✅ Success")
+            successful_downloads += 1
+        else:
+            print("❌ Failed")
+
+    print("Download completed")
+    print(f"Out of a total of {download_attempts} papers, {successful_downloads} were successfully downloaded.")
+
