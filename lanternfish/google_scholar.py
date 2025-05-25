@@ -1,32 +1,18 @@
-from llm_client import AsyncLLMClient
-import asyncio
-from prompts import SYSTEM_GENERATE_QUERIES
+
+from llm_api import generate_search_prompts
 from scholarly import scholarly
-from pydantic import BaseModel
-import pydantic
 import logging
-import json
-
-class SearchQueries(pydantic.BaseModel):
-    queries: list[str]
-
-llm_client = AsyncLLMClient()
-
-def generate_search_prompts(user_prompt):
-    return asyncio.run(
-        llm_client.get_completion(user_prompt,
-                                    system_message=SYSTEM_GENERATE_QUERIES))
-
 
 def search(prompt, max_n_papers=50):
     search_queries = generate_search_prompts(prompt)
 
     search_results = []
 
-        
-    for paper in scholarly.search_pubs(search_queries):
-        if len(search_results) >= max_n_papers:
-            break
+    logging.info(f"Searching Google Scholar for {len(search_results)} papers")
+    
+    papers = scholarly.search_pubs(search_queries)
+    logging.info(f"Found {len(papers)} papers")
+    for paper in papers[:max_n_papers]:
         if paper not in search_results:
             search_results.append(paper)
 
