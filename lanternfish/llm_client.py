@@ -65,7 +65,6 @@ class AsyncLLMClient:
                         logging.error(f"Couldn't parse json {text_response}")
                         
                 return  text_response
-                return text_response
             else:
                 logging.error("No completion choices returned.")
                 return None
