@@ -13,8 +13,7 @@ def search(prompt, max_n_papers=50):
     papers = scholarly.search_pubs(search_queries)
     
     for paper in papers:
-        if paper not in search_results:
-            search_results.append(paper)
+        search_results.append(paper)
         if len(search_results) >= max_n_papers:
             break
 
