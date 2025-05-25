@@ -5,9 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "arxiv>=2.2.0",
     "ollama>=0.4.8",
     "openai>=1.82.0",
     "pydantic>=2.11.4",
     "requests>=2.32.3",
     "scholarly>=1.7.11",
+    "thefuzz>=0.22.1",
 ]

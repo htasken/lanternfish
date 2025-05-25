@@ -4,6 +4,7 @@
 
 import llm_api
 import google_scholar
+import download_papers
 import argparse
 import logging
 
@@ -39,6 +40,9 @@ def main(args=None):
     # Check relevance of abstracts and remove irrelevant papers
 
     # Download the papers
+
+    for paper in papers:
+        download_papers.download_paper(paper)
 
     # Get relevance score of the full papers
 

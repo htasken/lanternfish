@@ -13,3 +13,4 @@ env/
 .server_users.pid
 
 lanternfish/test.py
+lanternfish/papers
