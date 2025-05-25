@@ -1,5 +1,6 @@
 import os
 import asyncio
+import atexit
 import requests
 from openai import AsyncOpenAI, OpenAIError # Import AsyncOpenAI
 import logging
@@ -21,6 +22,7 @@ class AsyncLLMClient:
 
         if os.getenv("START_LOCAL_OLLAMA"):
             self.local_ollama = LocalOllama(self.model_name, self.server_port)
+            atexit.register(self.local_ollama._stop_ollama_server)
 
         custom_base_url = None
         if self.server_ip and self.server_port:
@@ -113,12 +115,10 @@ class LocalOllama:
         except:
             file_dir = os.getcwd()
         self.server_pid_file = os.path.join(file_dir, ".server.pid")
-        self.server_users_pid_file = os.path.join(file_dir, ".server_users.pid")
         self.server_port = server_port
         self.server_url = f"http://localhost:{self.server_port}"
         os.environ["OLLAMA_HOST"] = self.server_url
         self._start_ollama_server()
-        self._register_use_of_ollama_server()
 
     def _check_if_ollama_server_is_running(self):
         try: 
@@ -169,21 +169,15 @@ class LocalOllama:
         try:
             with open(self.server_pid_file, "r") as f:
                 pid = int(f.read())
+                
+            logging.info(f"Stopping Ollama with PID {pid}")
             os.kill(pid, signal.SIGTERM)
+            os.remove(self.server_pid_file)
+            logging.debug(f"Deleted server PID file {self.server_pid_file}")
         except FileNotFoundError:
             logging.error("Server not running or PID file not found.")
 
-    def _register_use_of_ollama_server(self):
-        logging.debug(f"Registering use of Ollama server on {os.getpid()}.")
-        with open(self.server_users_pid_file, "a") as f:
-            f.write(str(os.getpid()) + "\n")
-
     def close(self):
-        """Close the LLM and stop the server if no other users are registered.
-
-        Needs to be called manually if 'with LLM(...) as llm:' is not used,
-        as __del__ can't open files."""
-        self._unregister_use_of_ollama_server()
         self._stop_ollama_server()
 
     def __enter__(self):
