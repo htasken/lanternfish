@@ -1,7 +1,12 @@
 import os
 import asyncio
+import requests
 from openai import AsyncOpenAI, OpenAIError # Import AsyncOpenAI
 import logging
+import subprocess
+import sys
+import time, signal
+import ollama
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
@@ -11,6 +16,11 @@ class AsyncLLMClient:
         self.server_port = os.getenv("LLM_SERVER_PORT")
         self.model_name = os.getenv("LLM_MODEL_NAME")
         self.api_key = os.getenv("OPENAI_API_KEY")
+        
+        self.local_ollama=None
+
+        if os.getenv("START_LOCAL_OLLAMA"):
+            self.local_ollama = LocalOllama(self.model_name, self.server_port)
 
         custom_base_url = None
         if self.server_ip and self.server_port:
@@ -84,6 +94,104 @@ class AsyncLLMClient:
         if self.client:
             await self.client.close()
             logging.info("AsyncLLMClient session closed.")
+
+
+class LocalOllama:
+    """LLM wrapper class for Ollama with async support."""
+
+    def __init__(self, model, server_port, logging_level=logging.WARNING):
+        """Start up a Ollama server and pull the model if not already running.
+
+        Args:
+            model (str): The name of the Ollma model to use. See https://ollama.com/models for available models.
+            logging_level (int): Logging level for the server. Default is logging.WARNING.
+        """
+        logging.basicConfig(level=logging_level)
+        self.model = model
+        try:
+            file_dir = os.path.dirname(os.path.abspath(__file__))
+        except:
+            file_dir = os.getcwd()
+        self.server_pid_file = os.path.join(file_dir, ".server.pid")
+        self.server_users_pid_file = os.path.join(file_dir, ".server_users.pid")
+        self.server_port = server_port
+        self.server_url = f"http://localhost:{self.server_port}"
+        os.environ["OLLAMA_HOST"] = self.server_url
+        self._start_ollama_server()
+        self._register_use_of_ollama_server()
+
+    def _check_if_ollama_server_is_running(self):
+        try: 
+            if requests.get(self.server_url).status_code == 200:
+                logging.debug("Server is already running.")
+                return True
+        except:
+            pass 
+        logging.debug("Server is not running already.")
+        return False
+
+    def _start_ollama_server(self):
+        if not self._check_if_ollama_server_is_running():
+            logging.info("Starting Ollama server.")
+            command = ["ollama", "serve"]
+            env_vars = dict(os.environ)
+            if sys.platform == "win32":
+                process = subprocess.Popen(
+                    command,
+                    env=env_vars,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    close_fds=True,
+                )
+            else:
+                process = subprocess.Popen(
+                    command,
+                    env=env_vars,
+                    start_new_session=True,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    close_fds=True,
+                )
+            with open(self.server_pid_file, "w") as f:
+                f.write(str(process.pid))
+            time.sleep(3)
+
+        client = ollama.Client(host=self.server_url)
+        if not any(model.model.startswith(self.model) for model in client.list().models):
+            logging.info(f"Downloading the Ollama model {self.model}. This may take a while...")
+            client.pull(model=self.model)
+
+    def _stop_ollama_server(self):
+        logging.info("Stopping Ollama server.")
+        try:
+            with open(self.server_pid_file, "r") as f:
+                pid = int(f.read())
+            os.kill(pid, signal.SIGTERM)
+        except FileNotFoundError:
+            logging.error("Server not running or PID file not found.")
+
+    def _register_use_of_ollama_server(self):
+        logging.debug(f"Registering use of Ollama server on {os.getpid()}.")
+        with open(self.server_users_pid_file, "a") as f:
+            f.write(str(os.getpid()) + "\n")
+
+    def close(self):
+        """Close the LLM and stop the server if no other users are registered.
+
+        Needs to be called manually if 'with LLM(...) as llm:' is not used,
+        as __del__ can't open files."""
+        self._unregister_use_of_ollama_server()
+        self._stop_ollama_server()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+        
 
 async def main():
     # Instantiate the client
