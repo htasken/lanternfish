@@ -1,14 +1,13 @@
 import os
 import requests
 import arxiv
+import shutil
 from thefuzz import fuzz
 
 def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers", verbose = False):
+    
     safe_title = "".join(c if c.isalnum() else "_" for c in title)[:100]
     filepath = os.path.join(folder, f"{safe_title}.pdf")
-
-    if not os.path.exists(folder):
-        os.makedirs(folder)
 
     try:
         response = requests.get(pdf_url, timeout=10)
@@ -33,8 +32,6 @@ def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers", verbose =
 
 
 def download_from_arxiv(title, folder="lanternfish/papers", similarity_threshold=80, verbose = False):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
 
     client = arxiv.Client()
 
@@ -87,6 +84,49 @@ def download_paper(paper, folder="lanternfish/papers", verbose = False):
         if verbose:
             print(f"Trying arXiv download")
         return download_from_arxiv(title, folder, verbose = verbose)
+    
+
+def download_papers(papers, folder="lanternfish/papers", verbose=False):
+    successful_downloads = 0
+    download_attempts = len(papers)
+    successful_papers = []
+
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    else:
+        clear_folder(folder)
+
+    print("Downloading papers")
+
+    for i, paper in enumerate(papers):
+        if verbose:
+            print(f"\nAttempting to download paper {i+1}/{download_attempts}: {paper['bib']['title']}")
+        successful = download_paper(paper, verbose=verbose)
+        if successful is not None:
+            if verbose:
+                print("✅ Success")
+            successful_downloads += 1
+            successful_papers.append(paper)
+        else:
+            if verbose:
+                print("❌ Failed")
+
+    print("\nDownload completed")
+    print(f"Out of a total of {download_attempts} papers, {successful_downloads} were successfully downloaded.")
+    return successful_papers
+
+
+def clear_folder(folder):
+    if os.path.exists(folder):
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print(f'Failed to delete {file_path}. Reason: {e}')
 
 
 if __name__=="__main__":
@@ -104,20 +144,5 @@ if __name__=="__main__":
                     # Not directly downloadable and not found in arXiv
                     ]
     
-    successful_downloads = 0
-    download_attempts = len(papers_example)
-
-    print("Downloading papers")
-
-    for i, paper in enumerate(papers_example):
-        print(f"\nAttempting to download paper {i+1}/{download_attempts}: {paper['bib']['title']}")
-        successful = download_paper(paper, verbose=True)
-        if successful is not None:
-            print("✅ Success")
-            successful_downloads += 1
-        else:
-            print("❌ Failed")
-
-    print("Download completed")
-    print(f"Out of a total of {download_attempts} papers, {successful_downloads} were successfully downloaded.")
+    papers_example = download_papers(papers_example, verbose=True)
 

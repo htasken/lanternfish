@@ -40,23 +40,9 @@ def main(args=None):
     # Check relevance of abstracts and remove irrelevant papers
 
     # Download the papers
+    papers = download_papers.download_papers(papers)
 
-    successful_downloads = 0
-    download_attempts = len(papers)
-
-    print("Downloading papers")
-
-    for i, paper in enumerate(papers):
-        print(f"\nAttempting to download paper {i+1}/{download_attempts}: {paper['bib']['title']}")
-        successful = download_papers.download_paper(paper, verbose=False)
-        if successful is not None:
-            print("✅ Success")
-            successful_downloads += 1
-        else:
-            print("❌ Failed")
-
-    print("Download completed")
-    print(f"Out of a total of {download_attempts} papers, {successful_downloads} were successfully downloaded.")
+    # Transform papers to LaTeX 
 
     # Get relevance score of the full papers
 
