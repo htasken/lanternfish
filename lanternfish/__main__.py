@@ -7,6 +7,7 @@ import google_scholar
 import download_papers
 import argparse
 import logging
+import llm_api
 
 def command_line_arguments(args=None):
     parser = argparse.ArgumentParser(description="Lanternfish is a LLM research assistant that helps search through large amounts of research papers.")
@@ -35,7 +36,7 @@ def main(args=None):
     args = command_line_arguments(args)
     logging.basicConfig(level=args.logging_level)
 
-    papers = google_scholar.search(args.prompt, args.model, args.max_papers_evaluated)
+    papers = google_scholar.search(args.prompt, args.max_papers_evaluated) # TODO: use args.model
 
     # Check relevance of abstracts and remove irrelevant papers
 
@@ -45,6 +46,10 @@ def main(args=None):
     # Transform papers to LaTeX 
 
     # Get relevance score of the full papers
+    # If paper_latex is a list of dictionaries with the latex code in the 'paper' key, use the following code:
+    # for paper_dict in papers_latex:
+    #     score = llm_api.generate_relevance_score(args.prompt, paper_dict["paper"])
+    #     paper_dict["relevance_score"] = score
 
     # Generate a review of the papers
 
