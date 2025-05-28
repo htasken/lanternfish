@@ -2,6 +2,7 @@ from pix2text import Pix2Text
 import multiprocessing
 import functools
 import os
+from common import clear_folder
 
 def convert_all(paths_pdf, output_dir="lanternfish/converted_papers", processes=10):
     """
@@ -63,18 +64,6 @@ def convert(path_pdf, output_dir="lanternfish/converted_papers"):
     
     return markdown
 
-
-def clear_folder(folder):
-    if os.path.exists(folder):
-        for filename in os.listdir(folder):
-            file_path = os.path.join(folder, filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)
-            except Exception as e:
-                print(f'Failed to delete {file_path}. Reason: {e}')
 
 if __name__ == "__main__":
     # Example usage
