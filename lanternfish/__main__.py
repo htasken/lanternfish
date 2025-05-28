@@ -5,9 +5,9 @@
 import llm_api
 import google_scholar
 import download_papers
+import pdf_to_markdown
 import argparse
 import logging
-import llm_api
 
 def command_line_arguments(args=None):
     parser = argparse.ArgumentParser(description="Lanternfish is a LLM research assistant that helps search through large amounts of research papers.")
@@ -23,7 +23,7 @@ def command_line_arguments(args=None):
         help="The minimal relevance score of the papers. Default is 0.7.")
     parser.add_argument('-q', '--min_quality', default=0.7, type=float, 
         help="The minimal quality score of the papers. Default is 0.7.")
-    parser.add_argument('--max_papers_evaluated', default=50, type=int,
+    parser.add_argument('--max_papers_evaluated', default=5, type=int,
         help="The maximal number of returned from google scholar search for further evaluation. Default is 50.")
     parser.add_argument('--logging_level', default=30, type=int,
         help="The logging level. Default is '30' and the meaning of the number is as follows: 10=DEBUG, 20=INFO, 30=WARNING, 40=ERROR, 50=CRITICAL.")
@@ -38,12 +38,13 @@ def main(args=None):
 
     papers = google_scholar.search(args.prompt, args.max_papers_evaluated) # TODO: use args.model
 
-    # Check relevance of abstracts and remove irrelevant papers
-
     # Download the papers
-    papers = download_papers.download_papers(papers)
+    papers, pdf_paths = download_papers.download_papers(papers)
+    
+    # Convert PDFs to markdown with LaTeX for equations
+    markdown_paths = pdf_to_markdown.convert_all(pdf_paths)
 
-    # Transform papers to LaTeX 
+    # Check relevance of abstracts and remove irrelevant papers
 
     # Get relevance score of the full papers
     # If paper_latex is a list of dictionaries with the latex code in the 'paper' key, use the following code:

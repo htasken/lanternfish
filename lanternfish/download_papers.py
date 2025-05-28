@@ -90,6 +90,7 @@ def download_papers(papers, folder="lanternfish/papers", verbose=False):
     successful_downloads = 0
     download_attempts = len(papers)
     successful_papers = []
+    pdf_paths = []
 
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -101,19 +102,20 @@ def download_papers(papers, folder="lanternfish/papers", verbose=False):
     for i, paper in enumerate(papers):
         if verbose:
             print(f"\nAttempting to download paper {i+1}/{download_attempts}: {paper['bib']['title']}")
-        successful = download_paper(paper, verbose=verbose)
-        if successful is not None:
+        path = download_paper(paper, verbose=verbose)
+        if path is not None:
             if verbose:
                 print("✅ Success")
             successful_downloads += 1
             successful_papers.append(paper)
+            pdf_paths.append(path)
         else:
             if verbose:
                 print("❌ Failed")
 
     print("\nDownload completed")
     print(f"Out of a total of {download_attempts} papers, {successful_downloads} were successfully downloaded.")
-    return successful_papers
+    return successful_papers, pdf_paths
 
 
 def clear_folder(folder):
