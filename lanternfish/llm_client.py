@@ -24,9 +24,9 @@ class AsyncLLMClient:
 
         if os.getenv("USE_LOCAL_OLLAMA"):
             client = ollama.Client(host=f"http://{self.server_ip}:{self.server_port}")
-            if not any(model.model.startswith(self.model) for model in client.list().models):
-                logging.info(f"Downloading the Ollama model {self.model}. This may take a while...")
-                client.pull(model=self.model)
+            if not any(model.model.startswith(self.model_name) for model in client.list().models):
+                logging.info(f"Downloading the Ollama model {self.model_name}. This may take a while...")
+                client.pull(model=self.model_name)
 
         custom_base_url = None
         if self.server_ip and self.server_port:
