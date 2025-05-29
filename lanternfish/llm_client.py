@@ -13,7 +13,7 @@ class AsyncLLMClient:
     def __init__(self):
         self.server_ip = os.getenv("LLM_SERVER_IP")
         self.server_port = os.getenv("LLM_SERVER_PORT")
-        self.model_name = os.getenv("LLM_MODEL_NAME")
+        self.model_name = os.getenv("CLI_MODEL_NAME",os.getenv("LLM_MODEL_NAME"))
         self.api_key = os.getenv("OPENAI_API_KEY")
         
         self.local_ollama=None
@@ -21,6 +21,12 @@ class AsyncLLMClient:
         if os.getenv("START_LOCAL_OLLAMA"):
             self.local_ollama = LocalOllama(self.model_name, self.server_port)
             atexit.register(self.local_ollama._stop_ollama_server)
+
+        if os.getenv("USE_LOCAL_OLLAMA"):
+            client = ollama.Client(host=f"http://{self.server_ip}:{self.server_port}")
+            if not any(model.model.startswith(self.model) for model in client.list().models):
+                logging.info(f"Downloading the Ollama model {self.model}. This may take a while...")
+                client.pull(model=self.model)
 
         custom_base_url = None
         if self.server_ip and self.server_port:
