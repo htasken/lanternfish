@@ -9,6 +9,12 @@ Response example:
 (Query1 AND Query2 AND (Query3 OR Query4)) OR (Query5 AND Query6) OR (Query7 OR Query8)
 """
 
+SYSTEM_GENERATE_QUERY = """
+Generate a search query for Google Scholar based on the user description below.
+The respose should be a single line with the query, without any additional text or formatting.
+Use search operators (e.g. 'AND', 'OR', 'after:') if beneficial. 
+"""
+
 SYSTEM_GENERATE_RELEVANCE_SCORE = """
 You are an expert academic assistant. You will be given a 'User prompt' followed by the LaTeX source of a 'Paper'.
 

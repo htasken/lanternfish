@@ -9,8 +9,6 @@ import sys
 import time, signal
 import ollama
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-
 class AsyncLLMClient:
     def __init__(self):
         self.server_ip = os.getenv("LLM_SERVER_IP")
@@ -224,4 +222,5 @@ async def main():
         logging.error("Could not initialize AsyncLLMClient.")
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
     asyncio.run(main())
