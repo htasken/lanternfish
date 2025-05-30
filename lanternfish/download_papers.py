@@ -2,7 +2,6 @@ from common import clear_folder
 import os
 import requests
 import arxiv
-import shutil
 from thefuzz import fuzz
 
 def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers", verbose = False):

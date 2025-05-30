@@ -1,4 +1,5 @@
 import os
+import shutil
 
 def clear_folder(folder):
     """
