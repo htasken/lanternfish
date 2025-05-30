@@ -43,13 +43,10 @@ def main(args=None):
     papers = google_scholar.search(args.prompt, args.max_papers_evaluated) 
 
     # Download the papers
-    papers, pdf_paths = download_papers.download_papers(papers)
+    papers = download_papers.download_papers(papers)
     
     # Convert PDFs to markdown with LaTeX for equations
-    markdown_paths = pdf_to_markdown.convert_all(pdf_paths)
-
-    # Remove irrelevant papers based on abstract and titles
-    # papers, markdown_paths = remove_irrelevant_papers(papers, markdown_paths)
+    papers = pdf_to_markdown.convert_all(papers)
 
     # Get relevance score of the full papers
     # To be changed:

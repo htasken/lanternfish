@@ -36,34 +36,47 @@ def search(prompt, max_n_papers=50):
         new_prompt += "Please generate a new search query that will find more relevant papers."
         search_queries.append(generate_search_prompts(new_prompt))
 
-    search_results = []
-
     logging_info_queries = "Search queries generated:\n"
     for query in search_queries:
         logging_info_queries += f"- {query}\n"
     logging.info(logging_info_queries)
+
+    paper = {
+        "google scholar info": None,
+        "pdf path": None,
+        "markdown path": None,
+        "relevancy score": None,
+        "quality score": None,
+        "total score": None,
+        "summary": None,
+    }
+    papers = []
+    unique_ids = []
 
     print("Searching Google Scholar for papers...")
     logging.info(f"Searching Google Scholar for at most {max_n_papers} papers")
     
     current_max_n_papers = [int(max_n_papers* 0.75), int(max_n_papers * 0.90), max_n_papers]
     for i, query in enumerate(search_queries):
-        papers = scholarly.search_pubs(query)
-        for paper in papers:
-            if len(search_results) >= current_max_n_papers[i]:
+        google_scholar_hits = scholarly.search_pubs(query)
+        for paper_info in google_scholar_hits:
+            if len(papers) >= current_max_n_papers[i]:
                 break
-            if paper not in search_results:
-                search_results.append(paper)
+            unique_id = (paper_info['bib']['title'], paper_info['bib']['author'])
+            if (unique_id not in unique_ids):
+                papers.append(paper.copy())
+                papers[-1]["google scholar info"] = paper_info
+                unique_ids.append(unique_id)
 
-    logging.info(f"Found {len(search_results)} papers")
+    logging.info(f"Found {len(papers)} papers")
     
-    return search_results
+    return papers
 
 if __name__ == "__main__":
     # Example usage
     logging.basicConfig(level=logging.INFO)
     prompt = "What are the latest advancements in quantum computing?"
-    search_results = search(prompt,  max_n_papers=10)
+    papers = search(prompt,  max_n_papers=10)
     print("Search results:")
-    for result in search_results:
-        print(f"Title: {result['bib']['title']}")
+    for paper in papers:
+        print(f"Title: {paper['google scholar info']['bib']['title']}")

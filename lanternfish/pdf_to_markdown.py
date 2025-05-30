@@ -4,7 +4,7 @@ import functools
 import os
 from common import clear_folder
 
-def convert_all(paths_pdf, output_dir="lanternfish/converted_papers", processes=10):
+def convert_all(papers, output_dir="lanternfish/converted_papers", processes=10):
     """
     Convert a list of PDF files to markdown with equations in latex and saves
     the files in 'output_dir'.
@@ -21,14 +21,16 @@ def convert_all(paths_pdf, output_dir="lanternfish/converted_papers", processes=
         os.makedirs(output_dir)
 
     paths_pdf_to_convert = []
-    paths_converted_files = []
-    for path_pdf in paths_pdf:
+    papers_converted = []
+    for paper in papers:
+        path_pdf = paper["pdf_path"]
         pdf_filename = os.path.basename(path_pdf)
         md_dir = os.path.join(output_dir, f"{pdf_filename}").removesuffix(".pdf")
         if not os.path.exists(md_dir):
             os.makedirs(md_dir)
         md_path = os.path.join(md_dir, "output.md")
-        paths_converted_files.append(md_path)
+        paper["markdown path"] = md_path
+        papers_converted.append(paper)
         if not os.path.exists(md_path):
             paths_pdf_to_convert.append(path_pdf)
 
@@ -36,7 +38,7 @@ def convert_all(paths_pdf, output_dir="lanternfish/converted_papers", processes=
         convert_func = functools.partial(convert, output_dir=output_dir)
         pool.map(convert_func, paths_pdf_to_convert)
     
-    return paths_converted_files
+    return papers_converted
 
 def convert(path_pdf, output_dir="lanternfish/converted_papers"):
     """
