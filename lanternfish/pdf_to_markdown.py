@@ -17,11 +17,10 @@ def convert_all(paths_pdf, output_dir="lanternfish/converted_papers", processes=
     Returns:
         list: Paths to converted files.
     """
-    if os.path.exists(output_dir):
-        clear_folder(output_dir)
-    else:
+    if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
+    paths_pdf_to_convert = []
     paths_converted_files = []
     for path_pdf in paths_pdf:
         pdf_filename = os.path.basename(path_pdf)
@@ -30,10 +29,12 @@ def convert_all(paths_pdf, output_dir="lanternfish/converted_papers", processes=
             os.makedirs(md_dir)
         md_path = os.path.join(md_dir, "output.md")
         paths_converted_files.append(md_path)
+        if not os.path.exists(md_path):
+            paths_pdf_to_convert.append(path_pdf)
 
     with multiprocessing.Pool(processes=processes) as pool:
         convert_func = functools.partial(convert, output_dir=output_dir)
-        pool.map(convert_func, paths_pdf)
+        pool.map(convert_func, paths_pdf_to_convert)
     
     return paths_converted_files
 
