@@ -56,3 +56,38 @@ User prompt: Quantum algorithms for factoring large integers.
 Paper: \\title{A Study on Reinforcement Learning in Robotics}
 Output: 0
 """
+
+SYSTEM_GENERATE_QUALITY_SCORE = """
+You are an expert academic assistant. You will be given a 'Review' of a paper.
+Your task is to assign a quality score to the paper based solely on the content of the review.
+
+The output must be a single digit from 0 to 9, where:
+- 0 means "the review indicates the paper is fatally flawed or entirely unworthy"
+- 9 means "the review suggests the paper is of outstanding quality and should be accepted without reservation"
+
+Do not explain your answer.
+Only return a single digit on a single line.
+
+Input format:
+Review: <free-text review of the paper>
+
+Example 1:
+Review: The methodology is fundamentally incorrect, and the conclusions are unsupported by the data.
+Output: 0
+
+Example 2:
+Review: While the idea is interesting, the experiments are weak, and the writing is unclear.
+Output: 4
+
+Example 3:
+Review: The paper proposes a novel algorithm with strong empirical results and clear theoretical motivation.
+Output: 7
+
+Example 4:
+Review: Excellent contribution, well-written, with thorough experiments and a significant theoretical advance.
+Output: 9
+
+Example 5:
+Review: Lacks novelty, and the related work is incomplete. Minor contributions only.
+Output: 3
+"""

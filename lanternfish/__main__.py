@@ -12,6 +12,7 @@ import pdf_to_markdown
 import argparse
 import logging
 import os
+import asyncio
 
 def command_line_arguments(args=None):
     parser = argparse.ArgumentParser(description="Lanternfish is a LLM research assistant that helps search through large amounts of research papers.")
@@ -27,6 +28,8 @@ def command_line_arguments(args=None):
         help="The minimal quality score of the papers. Default is 0.7.")
     parser.add_argument('--max_papers_evaluated', default=5, type=int,
         help="The maximal number of returned from google scholar search for further evaluation. Default is 50.")
+    parser.add_argument('--n_samples_score', default=1, type=int,
+        help="Number of times to sample from the LLM when computing relevance and quality scores. The final score is averaged. Default is 1.")
 
     return parser.parse_args(args)
 
@@ -37,7 +40,7 @@ def main(args=None):
     args = command_line_arguments(args)
 
     # Generate search terms and search Google Scholar for papers
-    papers = google_scholar.search(args.prompt, args.max_papers_evaluated) # TODO: use args.model
+    papers = google_scholar.search(args.prompt, args.max_papers_evaluated) 
 
     # Download the papers
     papers, pdf_paths = download_papers.download_papers(papers)
@@ -46,17 +49,21 @@ def main(args=None):
     markdown_paths = pdf_to_markdown.convert_all(pdf_paths)
 
     # Remove irrelevant papers based on abstract and titles
-    #papers, markdown_paths = remove_irrelevant_papers(papers, markdown_paths)
+    # papers, markdown_paths = remove_irrelevant_papers(papers, markdown_paths)
 
     # Get relevance score of the full papers
-    # If paper_latex is a list of dictionaries with the latex code in the 'paper' key, use the following code:
+    # To be changed:
     # for paper_dict in papers_latex:
-    #     score = llm_api.generate_relevance_score(args.prompt, paper_dict["paper"])
+    #     score = asyncio.run(llm_api.generate_score(args.prompt, paper_dict["paper"], n_samples = args.n_samples_score, type = "relevance"))
     #     paper_dict["relevance_score"] = score
 
     # Generate a review of the papers
 
     # Give the papers a quality score
+    # To be changed:
+    # for paper_dict in papers_latex:
+    #     score = asyncio.run(llm_api.generate_score(args.prompt, paper_dict["review"], n_samples = args.n_samples_score, type = "quality"))
+    #     paper_dict["quality_score"] = score
 
     # Produce summaries of the papers with respect to the prompt
 
