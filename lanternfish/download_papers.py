@@ -24,6 +24,11 @@ def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers", verbose =
     safe_title = "".join(c if c.isalnum() else "_" for c in title)[:100]
     filepath = os.path.join(folder, f"{safe_title}.pdf")
 
+    if os.path.exists(filepath):
+        if verbose:
+            print(f"File already exists, skipping download: {filepath}")
+        return filepath
+
     try:
         response = requests.get(pdf_url, timeout=10)
         response.raise_for_status()  
@@ -138,8 +143,8 @@ def download_papers(papers, folder="lanternfish/papers", verbose=False):
     For each paper, this function first tries to download using the 'eprint_url' field 
     if available. If that fails or is missing, it falls back to a fuzzy arXiv title match.
     Successfully downloaded PDFs are saved to the specified folder.
-
-    The target folder is cleared before downloading begins to ensure a clean state.
+    Downloads are skipped if the PDF file already exists locally, avoiding redundant downloads.
+    
 
     Args:
         papers (list): A list of dictionaries, each representing a paper with at least a 
@@ -161,8 +166,6 @@ def download_papers(papers, folder="lanternfish/papers", verbose=False):
 
     if not os.path.exists(folder):
         os.makedirs(folder)
-    else:
-        clear_folder(folder)
 
     print("Downloading papers")
 
