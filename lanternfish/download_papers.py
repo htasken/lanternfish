@@ -6,7 +6,22 @@ import shutil
 from thefuzz import fuzz
 
 def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers", verbose = False):
-    
+    """
+    Download a PDF from a given URL and save it locally using a sanitized version of the title.
+
+    The PDF is saved in the specified folder with a filename derived from the paper title,
+    where non-alphanumeric characters are replaced by underscores and truncated to 100 characters.
+
+    Args:
+        pdf_url (str): URL pointing to the PDF file.
+        title (str): Title used to create a safe filename for saving the PDF.
+        folder (str): Directory where the PDF should be saved. Defaults to "lanternfish/papers".
+        verbose (bool): If True, prints progress messages. Defaults to False.
+
+    Returns:
+        str or None: The path to the saved PDF file if successful, otherwise None.
+    """
+
     safe_title = "".join(c if c.isalnum() else "_" for c in title)[:100]
     filepath = os.path.join(folder, f"{safe_title}.pdf")
 
@@ -33,6 +48,22 @@ def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers", verbose =
 
 
 def download_from_arxiv(title, folder="lanternfish/papers", similarity_threshold=80, verbose = False):
+    """
+    Search for and download a paper from arXiv using a fuzzy match on the title.
+
+    The function queries arXiv for the most relevant paper matching the provided title.
+    It then compares the returned title with the given title using token set ratio similarity.
+    If the similarity is above the specified threshold, the paper's PDF is downloaded.
+
+    Args:
+        title (str): The title of the paper to search for.
+        folder (str): Directory where the PDF should be saved. Defaults to "lanternfish/papers".
+        similarity_threshold (int): Minimum required similarity (0-100) between titles. Defaults to 80.
+        verbose (bool): If True, prints diagnostic messages during execution. Defaults to False.
+
+    Returns:
+        str or None: Path to the downloaded PDF if successful, otherwise None.
+    """
 
     client = arxiv.Client()
 
@@ -65,8 +96,22 @@ def download_from_arxiv(title, folder="lanternfish/papers", similarity_threshold
 
 def download_paper(paper, folder="lanternfish/papers", verbose = False):
     """
-    Wrapper function to try Google Scholar eprint_url first, then fallback to arXiv search if needed.
+    Attempt to download a paper using its direct eprint URL, with fallback to arXiv search.
+
+    This function first tries to download the paper using the 'eprint_url' field provided
+    by Google Scholar. If the direct download fails or the URL is not present, it falls 
+    back to searching for the paper on arXiv using a fuzzy match on the paper title.
+
+    Args:
+        paper (dict): A dictionary containing metadata about the paper. Expected to have a 
+                      'bib' field with a 'title', and optionally an 'eprint_url' field.
+        folder (str): Directory where the PDF should be saved. Defaults to "lanternfish/papers".
+        verbose (bool): If True, prints progress and debug information. Defaults to False.
+
+    Returns:
+        str or None: Path to the downloaded PDF if successful, otherwise None.
     """
+
     title = paper['bib']['title']
     url = paper.get('eprint_url', None)
 
@@ -88,6 +133,28 @@ def download_paper(paper, folder="lanternfish/papers", verbose = False):
     
 
 def download_papers(papers, folder="lanternfish/papers", verbose=False):
+    """
+    Attempt to download a list of papers and return the successfully downloaded ones.
+
+    For each paper, this function first tries to download using the 'eprint_url' field 
+    if available. If that fails or is missing, it falls back to a fuzzy arXiv title match.
+    Successfully downloaded PDFs are saved to the specified folder.
+
+    The target folder is cleared before downloading begins to ensure a clean state.
+
+    Args:
+        papers (list): A list of dictionaries, each representing a paper with at least a 
+                       'bib' subdictionary containing the 'title'. Optionally includes an 
+                       'eprint_url' field.
+        folder (str): Directory where the downloaded PDFs will be saved. Defaults to "lanternfish/papers".
+        verbose (bool): If True, prints detailed information about each download attempt. Defaults to False.
+
+    Returns:
+        tuple:
+            list: The subset of `papers` that were successfully downloaded.
+            list: Paths to the corresponding successfully downloaded PDF files.
+    """
+
     successful_downloads = 0
     download_attempts = len(papers)
     successful_papers = []

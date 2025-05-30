@@ -14,6 +14,27 @@ def generate_search_prompts(user_prompt):
 
 
 async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance"):
+    """
+    Generate a relevance or quality score for a paper or review using an LLM.
+
+    The function sends a prompt to a language model `n_samples` times and computes the
+    average score returned by the model. For relevance scoring, the prompt consists of
+    the user's search intent and the paper information. For quality scoring, the prompt
+    uses review content instead. The score must be an integer between 0 and 9 (inclusive).
+
+    Args:
+        user_prompt (str): The user's query or task description.
+        paper_info (str): LaTeX-formatted paper metadata or review content.
+        n_samples (int): Number of times to query the model to average out the score. Default is 1.
+        type (str): Type of score to generate, either "relevance" or "quality".
+
+    Returns:
+        float: The average score returned by the LLM across `n_samples` calls.
+
+    Raises:
+        ValueError: If the `type` is invalid or no valid scores are returned.
+    """
+
     if type == "relevance":
         complete_prompt = f"User prompt: {user_prompt} \nPaper: {paper_info}"
         system_message = SYSTEM_GENERATE_RELEVANCE_SCORE
