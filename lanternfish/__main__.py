@@ -61,8 +61,9 @@ def main(args=None):
         if rel_score < args.min_relevance:
             continue
 
-        # Generate a review of the paper
-        paper["review"] = "Excellent paper"
+        paper["markdown_text"] = markdown_text
+
+        paper["review"] = llm_api.generate_review(args.prompt,markdown_text)
 
         # Get quality score
         qual_score = asyncio.run(llm_api.generate_score(args.prompt, paper["review"], n_samples = args.n_samples_score, type = "quality"))
