@@ -2,6 +2,14 @@
 from llm_api import generate_search_prompts
 from scholarly import scholarly
 import logging
+from cache_to_disk import cache_to_disk
+
+@cache_to_disk(1)
+def get_scholar_search_pubs(query, max_n_papers): # to cache google scholar results
+    papers = []
+    for i in range(max_n_papers):
+        papers.append(next(scholarly.search_pubs_query(query)))
+    return papers
 
 def search(prompt, max_n_papers=50):
     """Find papers using Google Scholar.
@@ -59,7 +67,7 @@ def search(prompt, max_n_papers=50):
     
     current_max_n_papers = [int(max_n_papers* 0.75), int(max_n_papers * 0.90), max_n_papers]
     for i, query in enumerate(search_queries):
-        google_scholar_hits = scholarly.search_pubs(query)
+        google_scholar_hits = get_scholar_search_pubs(query, max_n_papers)
         for paper_info in google_scholar_hits:
             if len(papers) >= current_max_n_papers[i]:
                 break
