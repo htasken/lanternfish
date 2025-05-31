@@ -116,3 +116,16 @@ The summary should be clear, precise, and written for an audience familiar with 
 
 Do not include irrelevant details or extensive background unless directly related to the contributions.
 """
+
+SYSTEM_GENERATE_TITLE = """
+You are an expert academic assistant that have collected, scored and summaries many research papers for the user in a report.
+
+Create a short and descriptive title for the report based on the following user prompt:
+"""
+
+SYSTEM_GENERATE_SUMMARY_OVERALL = """
+You are an expert academic assistant that have collected and summaries research papers for the user in a report.
+
+Create a short and descriptive summary for the report based on the following user prompt and the summaries of the papers:
+"""
+

@@ -9,10 +9,12 @@ import llm_api
 import google_scholar
 import download_papers
 import pdf_to_markdown
+from generate_report import generate_report
 import argparse
 import logging
 import os
 import asyncio
+import math
 
 def command_line_arguments(args=None):
     parser = argparse.ArgumentParser(description="Lanternfish is a LLM research assistant that helps search through large amounts of research papers.")
@@ -21,7 +23,7 @@ def command_line_arguments(args=None):
     parser.add_argument('-m', '--model', default='gemma3:4b', type=str,
         help="The Ollama model to use for the LLM. Default is 'gemma3:4b'. See https://ollama.com/models for more models. Quantized models are also available.")
     parser.add_argument('-k', '--top_k', default=5, type=int,
-        help="The maximal number of papers to return. Default is 5.")
+        help="The maximal number of papers included in report. Default is 5.")
     parser.add_argument('-r', '--min_relevance', default=0.7, type=float, 
         help="The minimal relevance score of the papers. Default is 0.7.")
     parser.add_argument('-q', '--min_quality', default=0.7, type=float, 
@@ -56,22 +58,27 @@ def main(args=None):
         # Get relevance score of the full paper
         rel_score = asyncio.run(llm_api.generate_score(args.prompt, markdown_text, n_samples = args.n_samples_score, type = "relevance"))
         paper["relevance score"] = rel_score
+        if rel_score < args.min_relevance:
+            continue
 
         # Generate a review of the paper
-        #paper["review"]=
+        paper["review"] = "Excellent paper"
 
         # Get quality score
         qual_score = asyncio.run(llm_api.generate_score(args.prompt, paper["review"], n_samples = args.n_samples_score, type = "quality"))
         paper["quality_score"] = qual_score
+        if qual_score < args.min_quality:
+            continue
+
+        # Calc total score
+        paper["total_score"] = math.sqrt(paper["relevance score"]*paper["quality_score"])
 
         # Produce summaries of the papers with respect to the prompt
-        summary = llm_api.generate_summary(args.prompt, markdown_text, n_samples = args.n_samples_score, type = "quality")
+        summary = llm_api.generate_summary(args.prompt, markdown_text)
         paper["summary"] = summary
 
- 
-
-
     # Generate a final report 
+    generate_report(args.prompt, papers, args.top_k)
     
 if __name__ == "__main__":
     main()

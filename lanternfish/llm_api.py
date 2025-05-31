@@ -1,6 +1,6 @@
 from llm_client import AsyncLLMClient
 import asyncio
-from prompts import SYSTEM_GENERATE_QUERY, SYSTEM_GENERATE_RELEVANCE_SCORE, SYSTEM_GENERATE_QUALITY_SCORE, SYSTEM_GENERATE_SUMMARY
+from prompts import SYSTEM_GENERATE_QUERY, SYSTEM_GENERATE_RELEVANCE_SCORE, SYSTEM_GENERATE_QUALITY_SCORE, SYSTEM_GENERATE_SUMMARY, SYSTEM_GENERATE_TITLE
 
 
 llm_client = AsyncLLMClient()
@@ -11,7 +11,6 @@ def generate_search_prompts(user_prompt):
         llm_client.get_completion(user_prompt,
                                   system_message=SYSTEM_GENERATE_QUERY)
     )
-
 
 async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance"):
     """
@@ -68,7 +67,8 @@ async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance")
                 print(f"Invalid score (non-integer): {response}")
 
     if not scores:
-        raise ValueError("No valid scores returned by the LLM.")
+        return 5
+        #raise ValueError("No valid scores returned by the LLM.")
 
     return sum(scores) / len(scores)
 
@@ -103,3 +103,35 @@ def generate_summary(user_prompt, paper_latex, verbose=False):
         print("Summary generated.")
 
     return summary
+
+def generate_title(user_prompt):
+    """
+    Generate a title for a paper based on the user's prompt using the LLM.
+
+    Args:
+        user_prompt (str): The prompt describing the field/context for generating the title.
+
+    Returns:
+        str: The generated title from the LLM.
+    """
+
+    return asyncio.run(
+        llm_client.get_completion(
+            user_prompt,
+            system_message=SYSTEM_GENERATE_TITLE
+        )
+    )
+
+def generate_summary_overall(user_prompt, papers):
+    paper_titles_and_summaries = ""
+    for paper in papers:
+        paper_titles_and_summaries += f"Title:\n {paper['google scholar info']['bib']['title']}\n\nSummary:\n {paper['summary']}\n\n"
+
+    prompt = f"User prompt:\n{user_prompt}\n\nPapers in report:\n{paper_titles_and_summaries}"
+
+    return asyncio.run(
+        llm_client.get_completion(
+            prompt,
+            system_message=SYSTEM_GENERATE_SUMMARY
+        )
+    )

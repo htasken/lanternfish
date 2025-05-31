@@ -44,6 +44,7 @@ def search(prompt, max_n_papers=50):
     paper = {
         "google scholar info": None,
         "pdf path": None,
+        "url": None,
         "markdown path": None,
         "relevancy score": None,
         "quality score": None,
