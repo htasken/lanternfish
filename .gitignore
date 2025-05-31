@@ -4,6 +4,8 @@ __pycache__/
 *.swp
 *.tmp
 
+*.pdf
+
 .DS_Store
 
 env/

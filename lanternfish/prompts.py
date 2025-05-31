@@ -1,14 +1,3 @@
-
-
-SYSTEM_GENERATE_QUERIES = """
-Generate a search queriy for Google Scholar based on the following description from the user.
-Together the queries should give all potentially relevant papers.
-Use search operators (e.g., AND, OR) if beneficial. Respond only with a white space seperated list of terms.
-
-Response example:
-(Query1 AND Query2 AND (Query3 OR Query4)) OR (Query5 AND Query6) OR (Query7 OR Query8)
-"""
-
 SYSTEM_GENERATE_QUERY = """
 Generate a search query for Google Scholar based on the user description below.
 The respose should be a single line with the query, without any additional text or formatting.
@@ -83,7 +72,7 @@ Do not include irrelevant details or extensive background unless directly relate
 SYSTEM_GENERATE_TITLE = """
 You are an expert academic assistant that have collected, scored and summaries many research papers for the user in a report.
 
-Create a short and descriptive title for the report based on the following user prompt:
+Create a short and descriptive title for the report based on the following user prompt (only respone with the title, no additional text):
 """
 
 SYSTEM_GENERATE_SUMMARY_OVERALL = """

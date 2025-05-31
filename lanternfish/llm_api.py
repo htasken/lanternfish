@@ -10,12 +10,14 @@ llm_client = AsyncLLMClient()
 class Score(BaseModel):
     score: int
 
+class Title(BaseModel):
+    title: str
+
 def generate_search_prompts(user_prompt):
     return asyncio.run(
         llm_client.get_completion(user_prompt,
                                   system_message=SYSTEM_GENERATE_QUERY, temperature=0.0)
     )
-
 
 async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance"):
     """
@@ -135,13 +137,15 @@ def generate_title(user_prompt):
     Returns:
         str: The generated title from the LLM.
     """
-
-    return asyncio.run(
+    respone = asyncio.run(
         llm_client.get_completion(
             user_prompt,
-            system_message=SYSTEM_GENERATE_TITLE
+            system_message=SYSTEM_GENERATE_TITLE,
+            response_format=Title,
         )
     )
+
+    return respone.title
 
 def generate_summary_overall(user_prompt, papers):
     paper_titles_and_summaries = ""
