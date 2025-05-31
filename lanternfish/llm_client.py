@@ -49,7 +49,7 @@ class AsyncLLMClient:
             logging.error(f"Error initializing AsyncOpenAI client: {e}")
             self.client = None
 
-    async def get_completion(self, prompt: str, system_message: str = "You are a helpful assistant.", max_tokens: int = 500, json: bool = False) -> str | None:
+    async def get_completion(self, prompt: str, system_message: str = "You are a helpful assistant.", max_tokens: int = 500,  temperature = None, response_format=None) -> str | None:
         if not self.client:
             logging.error("AsyncLLMClient is not initialized. Cannot get completion.")
             return None
@@ -60,28 +60,38 @@ class AsyncLLMClient:
                 {"role": "user", "content": prompt}
             ]
             
-            if json:
-                response_format={ "type": "json_object" }
+            if response_format is None:
+                # Use await for the asynchronous API call
+                response = await self.client.chat.completions.create(
+                    model=self.model_name,
+                    temperature=temperature,
+                    messages=messages,
+                    max_tokens=max_tokens
+                )
             else:
-                response_format=None
-
-            # Use await for the asynchronous API call
-            response = await self.client.chat.completions.create(
-                model=self.model_name,
-                messages=messages,
-                response_format=response_format,
-                max_tokens=max_tokens
-            )
+                response = await self.client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    temperature=temperature,
+                    messages=messages,
+                    response_format=response_format,
+                    max_tokens=max_tokens
+                )
             if response.choices and len(response.choices) > 0:
-                text_response = response.choices[0].message.content.strip()
-                logging.debug("Response: "+text_response)
-                if json:
-                    try:
-                        return json.loads(text_response)
-                    except:
-                        logging.error(f"Couldn't parse json {text_response}")
-                        
-                return  text_response
+                if response_format is None:
+                    txt_response = response.choices[0].message.content.strip()
+                    logging.debug("LLM Response: "+txt_response)
+                    return txt_response
+                else:
+                    llm_response = response.choices[0].message
+                    if llm_response.parsed:
+                        return llm_response.parsed
+                    elif llm_response.refusal:
+                        return llm_response.refusal
+                    else:
+                        logging.error("Couldn't parse LLM response.")
+                        logging.error(llm_response)
+                        return None
+
             else:
                 logging.error("No completion choices returned.")
                 return None

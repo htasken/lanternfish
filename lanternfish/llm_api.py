@@ -1,7 +1,8 @@
 from llm_client import AsyncLLMClient
 import asyncio
-from prompts import SYSTEM_GENERATE_QUERY, SYSTEM_GENERATE_RELEVANCE_SCORE, SYSTEM_GENERATE_QUALITY_SCORE, SYSTEM_GENERATE_SUMMARY
-
+from prompts import SYSTEM_GENERATE_QUERY, SYSTEM_GENERATE_RELEVANCE_SCORE, SYSTEM_GENERATE_QUALITY_SCORE, SYSTEM_GENERATE_SUMMARY, system_generate_review
+import logging
+from pydantic import BaseModel
 
 llm_client = AsyncLLMClient()
 
@@ -9,8 +10,12 @@ llm_client = AsyncLLMClient()
 def generate_search_prompts(user_prompt):
     return asyncio.run(
         llm_client.get_completion(user_prompt,
-                                  system_message=SYSTEM_GENERATE_QUERY)
+                                  system_message=SYSTEM_GENERATE_QUERY, temperature=0.0)
     )
+
+class Score(BaseModel):
+    score: int
+
 
 
 async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance"):
@@ -48,20 +53,24 @@ async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance")
         llm_client.get_completion(
             complete_prompt,
             system_message=system_message,
-            max_tokens=1
+            # max_tokens=1,
+            response_format=Score
         )
         for _ in range(n_samples)
     ]
 
     responses = await asyncio.gather(*tasks)
+    print(responses)
+    responses = [r.score for r in responses]
 
     scores = []
     for response in responses:
         if response is not None:
             try:
-                score = int(response.strip())
+                score = response
                 if 0 <= score <= 9:
                     scores.append(score)
+                    logging.info(f"Score {score}")
                 else:
                     print(f"Invalid score (out of range): {score}")
             except ValueError:
@@ -103,3 +112,57 @@ def generate_summary(user_prompt, paper_latex, verbose=False):
         print("Summary generated.")
 
     return summary
+
+def generate_review(user_prompt, papers_text):
+    reviews = asyncio.run(generate_reviews_async(llm_client, papers_text, user_prompt))
+    return reviews
+
+async def generate_reviews_async(llm_client, papers_text, user_prompt):
+    logging.info(f"Generating {len(papers_text)} reviews of papers")
+    
+    tasks = [
+        llm_client.get_completion(
+            text,
+            system_message=system_generate_review(user_prompt),
+            max_tokens=1
+        )
+        for text in papers_text  # Note: should be iterating over papers_text, not range
+    ]
+    
+    reviews = await asyncio.gather(*tasks)
+    
+    logging.info("Reviews generated")
+    print(reviews)
+    return reviews
+
+
+# def generate_review(user_prompt, papers_text):
+#     """
+#     Generate a review of the paper relative to the user prompt
+
+#     Args:
+#         user_prompt (str): The prompt describing the field/context for tailoring the summary.
+#         papers_text (str): The text of the papers
+
+#     Returns:
+#         str: The generated summary from the LLM.
+#     """
+
+#     logging.info(f"Generating {len(papers_text)} reviews of papers")
+    
+#     tasks = [
+#         llm_client.get_completion(
+#             text,
+#             system_message=system_generate_review(user_prompt),
+#             max_tokens=1
+#         )
+#         for text in range(len(papers_text))
+#     ]
+    
+    
+#     reviews = asyncio.run(asyncio.gather(*tasks))
+
+#     logging.info("Reviews generated")
+#     print(reviews)
+    
+#     return reviews
