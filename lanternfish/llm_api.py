@@ -152,7 +152,7 @@ def generate_summary_overall(user_prompt, papers):
     for paper in papers:
         paper_titles_and_summaries += f"Title:\n {paper['google scholar info']['bib']['title']}\n\nSummary:\n {paper['summary']}\n\n"
 
-    prompt = f"User prompt:\n{user_prompt}\n\nPapers in report:\n{paper_titles_and_summaries}"
+    prompt = f"\nPapers in report:\n{paper_titles_and_summaries}\n\nUser prompt:\n{user_prompt}\n\nNow write a single paragraph with the most important information from the papers in the report, tailored to the user's prompt. (Nothing else, just the single paragraph.)"
 
     return asyncio.run(
         llm_client.get_completion(

@@ -78,6 +78,9 @@ Create a short and descriptive title for the report based on the following user 
 SYSTEM_GENERATE_SUMMARY_OVERALL = """
 You are an expert academic assistant that have collected and summaries research papers for the user in a report.
 
-Create a short and descriptive summary for the report based on the following user prompt and the summaries of the papers:
+Write a single paragraph that give the user the most important information it is looking for based on the summaries of the papers you have collected and the user prompt.
+
+Do not write anything other than this paragraph, do not include any additional text or formatting.
+
 """
 
