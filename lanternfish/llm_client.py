@@ -49,7 +49,7 @@ class AsyncLLMClient:
             logging.error(f"Error initializing AsyncOpenAI client: {e}")
             self.client = None
 
-    async def get_completion(self, prompt: str, system_message: str = "You are a helpful assistant.", max_tokens: int = 500,  temperature = None, response_format=None) -> str | None:
+    async def get_completion(self, prompt: str, system_message: str = "You are a helpful assistant.", max_tokens: int = 8000,  temperature = None, response_format=None) -> str | None:
         if not self.client:
             logging.error("AsyncLLMClient is not initialized. Cannot get completion.")
             return None

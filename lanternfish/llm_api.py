@@ -113,7 +113,6 @@ def generate_summary(user_prompt, paper_latex, verbose=False):
 
 def generate_review(user_prompt, paper_text):
     
-    
             
     review = asyncio.run(llm_client.get_completion(
         paper_text,
@@ -122,7 +121,7 @@ def generate_review(user_prompt, paper_text):
     
     logging.info("Review generated")
     
-    print(review)
+    # print(review)
     
     return review
 

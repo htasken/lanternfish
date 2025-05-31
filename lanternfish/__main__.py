@@ -25,7 +25,9 @@ def command_line_arguments(args=None):
     parser.add_argument('-k', '--top_k', default=5, type=int,
         help="The maximal number of papers included in report. Default is 5.")
     parser.add_argument('-r', '--min_relevance', default=0.7, type=float, 
-        help="The minimal relevance score of the papers. Default is 0.7.")
+        help="The minimal relevance score of the papers. Default is 0.7.")    
+    parser.add_argument('-l', '--max_paper_length', default=50000, type=int, 
+        help="The maximum number of characters of a paper that should be concerned.")
     parser.add_argument('-q', '--min_quality', default=0.7, type=float, 
         help="The minimal quality score of the papers. Default is 0.7.")
     parser.add_argument('--max_papers_evaluated', default=5, type=int,
@@ -54,6 +56,10 @@ def main(args=None):
     for paper in papers:
         with open(paper["markdown path"], "r", encoding="utf-8") as f:
             markdown_text = f.read()
+            
+        
+        # Truncate the paper text at max_paper_length
+        markdown_text= markdown_text[:args.max_paper_length]
 
         # Get relevance score of the full paper
         rel_score = asyncio.run(llm_api.generate_score(args.prompt, markdown_text, n_samples = args.n_samples_score, type = "relevance"))
