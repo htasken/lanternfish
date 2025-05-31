@@ -46,9 +46,11 @@ def system_generate_review(prompt):
     You review a papers relevance according to a research question by a user.
     You are provided with the research question of a user and the text of a research paper is likely to contain information to answer the user question.
 
-    Formulate a full review of the paper focussing on the information in the paper that the research question concerns.
+    Formulate a review of the paper focussing on the information in the paper that the research question concerns.
     If the paper is irrelevant or contains no important information respond by saying that the paper is irrelevant and summarize it shortly.
     This should not be a reviewer style review for a conference but rather just focussed on the research question and what the paper writes about it.
+    
+    IMPORTANT: Instead of a traditional review that evaluates different aspects of the paper (e.g. reproducivility, ethical considerations, ...) just return a long whole paragraph that contains only the information the research question concerns.
     
     The paper is provided to you in a message by the user and the research question is provided below:
     
