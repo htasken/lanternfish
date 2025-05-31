@@ -7,6 +7,8 @@ from pydantic import BaseModel
 
 llm_client = AsyncLLMClient()
 
+class Score(BaseModel):
+    score: int
 
 def generate_search_prompts(user_prompt):
     return asyncio.run(
@@ -50,14 +52,13 @@ async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance")
         llm_client.get_completion(
             complete_prompt,
             system_message=system_message,
-            # max_tokens=1,
-            response_format=Score
+            #max_tokens=1,
+            response_format=Score,
         )
         for _ in range(n_samples)
     ]
 
     responses = await asyncio.gather(*tasks)
-    print(responses)
     responses = [r.score for r in responses]
 
     scores = []
@@ -74,8 +75,7 @@ async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance")
                 print(f"Invalid score (non-integer): {response}")
 
     if not scores:
-        return 5
-        #raise ValueError("No valid scores returned by the LLM.")
+        raise ValueError("No valid scores returned by the LLM.")
 
     return sum(scores) / len(scores)
 
