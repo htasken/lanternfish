@@ -23,7 +23,7 @@ def convert_all(papers, output_dir="lanternfish/converted_papers", processes=10)
     paths_pdf_to_convert = []
     papers_converted = []
     for paper in papers:
-        path_pdf = paper["pdf_path"]
+        path_pdf = paper["pdf path"]
         pdf_filename = os.path.basename(path_pdf)
         md_dir = os.path.join(output_dir, f"{pdf_filename}").removesuffix(".pdf")
         if not os.path.exists(md_dir):
