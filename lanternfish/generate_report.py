@@ -26,12 +26,11 @@ def generate_report(prompt, papers, top_k, report_name=None):
 
     report_markdown = f"# [{title}\n\n"
 
-    report_markdown += f"*Prompt: {prompt}*\n"
+    report_markdown += f"*Prompt: {prompt}* <br>\n"
     n_papers = len(papers)
     report_markdown += f"*Lanternfish here presents the top {n_papers} papers.*\n\n"
 
     report_markdown += f"{summary_overall}\n\n"
-
     
     for paper in papers:
         paper_info = paper['google scholar info']['bib']
@@ -39,7 +38,7 @@ def generate_report(prompt, papers, top_k, report_name=None):
         report_markdown += f"*Year:* {paper_info['pub_year']} *Authors:* "
         for author in paper_info['author']:
             report_markdown += f" {author}, "
-        report_markdown += report_markdown.rstrip(", ") + "\n"
+        report_markdown = report_markdown.rstrip(", ") + "\n"
         report_markdown += f"Total Score: **{paper['total score']}**/10 "
         report_markdown += f"Quality Score: **{paper['quality score']}**/10 "
         report_markdown += f"Relevance Score: **{paper['relevance score']}**/10\n\n"
