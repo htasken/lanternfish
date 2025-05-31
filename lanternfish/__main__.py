@@ -48,21 +48,28 @@ def main(args=None):
     # Convert PDFs to markdown with LaTeX for equations
     papers = pdf_to_markdown.convert_all(papers)
 
-    # Get relevance score of the full papers
-    # To be changed:
-    # for paper_dict in papers_latex:
-    #     score = asyncio.run(llm_api.generate_score(args.prompt, paper_dict["paper"], n_samples = args.n_samples_score, type = "relevance"))
-    #     paper_dict["relevance_score"] = score
+    
+    for paper in papers:
+        with open(paper["markdown path"], "r", encoding="utf-8") as f:
+            markdown_text = f.read()
 
-    # Generate a review of the papers
+        # Get relevance score of the full paper
+        rel_score = asyncio.run(llm_api.generate_score(args.prompt, markdown_text, n_samples = args.n_samples_score, type = "relevance"))
+        paper["relevance score"] = rel_score
 
-    # Give the papers a quality score
-    # To be changed:
-    # for paper_dict in papers_latex:
-    #     score = asyncio.run(llm_api.generate_score(args.prompt, paper_dict["review"], n_samples = args.n_samples_score, type = "quality"))
-    #     paper_dict["quality_score"] = score
+        # Generate a review of the paper
+        #paper["review"]=
 
-    # Produce summaries of the papers with respect to the prompt
+        # Get quality score
+        qual_score = asyncio.run(llm_api.generate_score(args.prompt, paper["review"], n_samples = args.n_samples_score, type = "quality"))
+        paper["quality_score"] = qual_score
+
+        # Produce summaries of the papers with respect to the prompt
+        summary = llm_api.generate_summary(args.prompt, markdown_text, n_samples = args.n_samples_score, type = "quality")
+        paper["summary"] = summary
+
+ 
+
 
     # Generate a final report 
     

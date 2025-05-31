@@ -1,6 +1,6 @@
 from llm_client import AsyncLLMClient
 import asyncio
-from prompts import SYSTEM_GENERATE_QUERY, SYSTEM_GENERATE_RELEVANCE_SCORE, SYSTEM_GENERATE_QUALITY_SCORE
+from prompts import SYSTEM_GENERATE_QUERY, SYSTEM_GENERATE_RELEVANCE_SCORE, SYSTEM_GENERATE_QUALITY_SCORE, SYSTEM_GENERATE_SUMMARY
 
 
 llm_client = AsyncLLMClient()
@@ -36,7 +36,7 @@ async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance")
     """
 
     if type == "relevance":
-        complete_prompt = f"User prompt: {user_prompt} \nPaper: {paper_info}"
+        complete_prompt = f"User prompt:\n{user_prompt}\n\nPaper:\n{paper_info}"
         system_message = SYSTEM_GENERATE_RELEVANCE_SCORE
     elif type == "quality":
         complete_prompt = f"Review: {paper_info}"
@@ -72,3 +72,34 @@ async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance")
 
     return sum(scores) / len(scores)
 
+
+def generate_summary(user_prompt, paper_latex, verbose=False):
+    """
+    Generate a summary of a paper's transcription tailored to the user's prompt using the LLM.
+
+    Args:
+        transcription (str): The full markdown text transcription of the paper.
+        user_prompt (str): The prompt describing the field/context for tailoring the summary.
+        verbose (bool): Whether to print debug info.
+
+    Returns:
+        str: The generated summary from the LLM.
+    """
+
+    # Combine the transcription and user prompt into the message to the model
+    full_prompt = f"Paper content:\n{paper_latex}\n\nUser prompt:\n{user_prompt}"
+
+    if verbose:
+        print("Generating summary with LLM...")
+
+    summary = asyncio.run(
+        llm_client.get_completion(
+            full_prompt,
+            system_message=SYSTEM_GENERATE_SUMMARY
+        )
+    )
+
+    if verbose:
+        print("Summary generated.")
+
+    return summary
