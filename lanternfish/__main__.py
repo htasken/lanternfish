@@ -66,7 +66,7 @@ def main(args=None):
         paper["quality_score"] = qual_score
 
         # Produce summaries of the papers with respect to the prompt
-        summary = llm_api.generate_summary(args.prompt, markdown_text, n_samples = args.n_samples_score, type = "quality")
+        summary = llm_api.generate_summary(args.prompt, markdown_text)
         paper["summary"] = summary
 
  
