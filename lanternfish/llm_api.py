@@ -14,8 +14,8 @@ def generate_search_prompts(user_prompt):
     )
 
 class Score(BaseModel):
+    explenation: str
     score: int
-
 
 
 async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance"):
@@ -113,56 +113,17 @@ def generate_summary(user_prompt, paper_latex, verbose=False):
 
     return summary
 
-def generate_review(user_prompt, papers_text):
-    reviews = asyncio.run(generate_reviews_async(llm_client, papers_text, user_prompt))
-    return reviews
-
-async def generate_reviews_async(llm_client, papers_text, user_prompt):
-    logging.info(f"Generating {len(papers_text)} reviews of papers")
-    
-    tasks = [
-        llm_client.get_completion(
-            text,
-            system_message=system_generate_review(user_prompt),
-            max_tokens=1
-        )
-        for text in papers_text  # Note: should be iterating over papers_text, not range
-    ]
-    
-    reviews = await asyncio.gather(*tasks)
-    
-    logging.info("Reviews generated")
-    print(reviews)
-    return reviews
-
-
-# def generate_review(user_prompt, papers_text):
-#     """
-#     Generate a review of the paper relative to the user prompt
-
-#     Args:
-#         user_prompt (str): The prompt describing the field/context for tailoring the summary.
-#         papers_text (str): The text of the papers
-
-#     Returns:
-#         str: The generated summary from the LLM.
-#     """
-
-#     logging.info(f"Generating {len(papers_text)} reviews of papers")
-    
-#     tasks = [
-#         llm_client.get_completion(
-#             text,
-#             system_message=system_generate_review(user_prompt),
-#             max_tokens=1
-#         )
-#         for text in range(len(papers_text))
-#     ]
+def generate_review(user_prompt, paper_text):
     
     
-#     reviews = asyncio.run(asyncio.gather(*tasks))
-
-#     logging.info("Reviews generated")
-#     print(reviews)
+            
+    review = asyncio.run(llm_client.get_completion(
+        paper_text,
+        system_message=system_generate_review(user_prompt),
+    ))
     
-#     return reviews
+    logging.info("Review generated")
+    
+    print(review)
+    
+    return review

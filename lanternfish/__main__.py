@@ -58,18 +58,8 @@ def main(args=None):
         paper["relevance score"] = rel_score
 
         paper["markdown_text"] = markdown_text
-        # Generate a review of the paper
-        #paper["review"]=
 
-    # print(papers)
-    # print(list(papers))
-    reviews = llm_api.generate_review(args.prompt, [x["markdown_text"] for x in papers])
-    for i in range(len(reviews)):
-        papers[i]["review"] = reviews[i]
-        
-    print(papers)
-
-    for paper in papers:
+        paper["review"] = llm_api.generate_review(args.prompt,markdown_text)
 
         # Get quality score
         qual_score = asyncio.run(llm_api.generate_score(args.prompt, paper["review"], n_samples = args.n_samples_score, type = "quality"))
