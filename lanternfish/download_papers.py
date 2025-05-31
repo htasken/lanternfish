@@ -18,7 +18,8 @@ def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers", verbose =
         verbose (bool): If True, prints progress messages. Defaults to False.
 
     Returns:
-        str or None: The path to the saved PDF file if successful, otherwise None.
+        (str or None, str or None): The path to the saved PDF file if successful, 
+                                    otherwise None and the url to the PDF or None.
     """
 
     safe_title = "".join(c if c.isalnum() else "_" for c in title)[:100]
@@ -27,7 +28,7 @@ def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers", verbose =
     if os.path.exists(filepath):
         if verbose:
             print(f"File already exists, skipping download: {filepath}")
-        return filepath
+        return (filepath, pdf_url)
 
     try:
         response = requests.get(pdf_url, timeout=10)
@@ -37,18 +38,18 @@ def download_pdf_from_url(pdf_url, title, folder="lanternfish/papers", verbose =
         if "pdf" not in content_type.lower():
             if verbose:
                 print(f"URL does not point to a PDF: {pdf_url}")
-            return None
+            return (None, None)
 
         with open(filepath, "wb") as f:
             f.write(response.content)
 
         if verbose:
             print(f"Downloaded")
-        return filepath
+        return (filepath, pdf_url)
 
     except Exception as e:
         print(f"Failed to download from {pdf_url}: {e}")
-        return None
+        return (None, None)
 
 
 def download_from_arxiv(title, folder="lanternfish/papers", similarity_threshold=80, verbose = False):
@@ -92,10 +93,11 @@ def download_from_arxiv(title, folder="lanternfish/papers", similarity_threshold
 
         if verbose:
             print(f"No arXiv papers matched the title with similarity >= {similarity_threshold}%")
+        return (None, None)
     except Exception as e:
         if verbose:
             print(f"arXiv download failed for {title}: {e}")
-        return None
+        return (None, None)
 
 
 def download_paper(paper, folder="lanternfish/papers", verbose = False):
@@ -113,7 +115,8 @@ def download_paper(paper, folder="lanternfish/papers", verbose = False):
         verbose (bool): If True, prints progress and debug information. Defaults to False.
 
     Returns:
-        str or None: Path to the downloaded PDF if successful, otherwise None.
+        (str or None, str or None): Path to the downloaded PDF if successful, otherwise None 
+                                    and the URL used for download or None.
     """
 
     title = paper['bib']['title']
@@ -122,9 +125,9 @@ def download_paper(paper, folder="lanternfish/papers", verbose = False):
     if url:
         if verbose:
             print(f"Trying direct download")
-        filepath = download_pdf_from_url(url, title, folder, verbose = verbose)
+        filepath, url = download_pdf_from_url(url, title, folder, verbose = verbose)
         if filepath is not None:
-            return filepath
+            return (filepath, url)
         else:
             if verbose:
                 print(f"Direct download failed")
@@ -171,12 +174,13 @@ def download_papers(papers, folder="lanternfish/papers", verbose=False):
     for i, paper in enumerate(papers):
         if verbose:
             print(f"\nAttempting to download paper {i+1}/{download_attempts}: {paper['bib']['title']}")
-        path = download_paper(paper["google scholar info"], verbose=verbose)
+        path, url = download_paper(paper["google scholar info"], verbose=verbose)
         if path is not None:
             if verbose:
                 print("✅ Success")
             successful_downloads += 1
             paper["pdf path"] = path
+            paper["url"] = url
             successful_papers.append(paper)
         else:
             if verbose:
