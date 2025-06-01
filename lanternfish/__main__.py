@@ -73,12 +73,12 @@ def main(args=None):
 
         # Get quality score
         qual_score = asyncio.run(llm_api.generate_score(args.prompt, paper["review"], n_samples = args.n_samples_score, type = "quality"))
-        paper["quality_score"] = qual_score
+        paper["quality score"] = qual_score
         if qual_score < args.min_quality:
             continue
 
         # Calc total score
-        paper["total_score"] = math.sqrt(paper["relevance score"]*paper["quality_score"])
+        paper["total score"] = math.sqrt(paper["relevance score"]*paper["quality score"])
 
         # Produce summaries of the papers with respect to the prompt
         summary = llm_api.generate_summary(args.prompt, markdown_text)
