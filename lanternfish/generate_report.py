@@ -35,7 +35,10 @@ def generate_report(prompt, papers, top_k, report_name=None):
     for paper in papers:
         paper_info = paper['google scholar info']['bib']
         report_markdown += f"## [{paper_info['title']}]({paper['url']})\n"
-        report_markdown += f"*Year:* {paper_info['pub_year']} *Authors:* "
+        report_markdown += f"*Year:* {paper_info['pub_year']} "
+        if paper_info['venue']:
+            report_markdown += f"*Journal:* {paper_info['venue']} "
+        report_markdown += "*Authors:* "
         for author in paper_info['author']:
             report_markdown += f" {author}, "
         report_markdown = report_markdown.rstrip(", ") + "\n"

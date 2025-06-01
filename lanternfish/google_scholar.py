@@ -7,9 +7,12 @@ from cache_to_disk import cache_to_disk
 @cache_to_disk(1)
 def get_scholar_search_pubs(query, max_n_papers): # to cache google scholar results
     papers = []
-    hits = scholarly.search_pubs(query)
-    for i in range(max_n_papers):
-        papers.append(next(hits))
+    n_paper = 0
+    for paper in scholarly.search_pubs(query):
+        papers.append(paper)
+        n_paper += 1
+        if n_paper >= max_n_papers:
+            break
     return papers
 
 def search(prompt, max_n_papers=50):
