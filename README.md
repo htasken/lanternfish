@@ -1,32 +1,208 @@
+      
 # LanternFish
 
-Lanternfish is a LLM research assistant that helps search through large amounts of research papers.
+Lanternfish is an LLM-powered research assistant designed to help you navigate and summarize large volumes of research papers based on your specific queries.
 
-## Demo
-Video demonstrating the functionality of Lanternfish can be found ....
+## Features
+
+*   **Automated Paper Discovery**: Uses LLMs to generate effective search queries for Google Scholar.
+*   **PDF Acquisition**: Downloads papers, attempting direct links first, then falling back to arXiv.
+*   **Content Extraction**: Converts downloaded PDFs into Markdown format, preserving LaTeX for mathematical equations using `pix2text`.
+*   **LLM-Powered Analysis**:
+    *   Scores papers for **relevance** to your prompt.
+    *   Generates a **review** of each paper focused on your research question.
+    *   Scores papers for **quality** based on the generated review.
+    *   Creates a concise **summary** of each paper tailored to your prompt.
+*   **Customizable Filtering**: Allows setting thresholds for minimum relevance, quality, and the number of papers to evaluate and report.
+*   **Comprehensive Reporting**: Generates a PDF report including an overall summary, and for each selected paper: title, authors, publication year, scores, and its individual summary.
+*   **Flexible LLM Backend**: Supports local Ollama models and can be configured for other OpenAI API-compatible services.
+
+## How it Works
+
+LanternFish automates the research process through the following steps:
+
+1.  **Input**: You provide a natural language `prompt` describing your research interest, along with optional parameters like the desired number of papers (`top_k`), minimum relevance/quality scores, etc.
+2.  **Search Query Generation**: An LLM generates multiple targeted search queries for Google Scholar based on your input prompt.
+3.  **Paper Retrieval**:
+    *   The system searches Google Scholar using the generated queries.
+    *   It attempts to download the PDF of each identified paper, prioritizing direct e-print URLs and then searching arXiv.
+4.  **Content Conversion**: Successfully downloaded PDFs are converted into Markdown format. Figures and tables are typically handled by `pix2text` (tables might be converted as images).
+5.  **Paper Evaluation & Summarization (per paper)**:
+    *   The Markdown content of each paper (truncated to `max_paper_length`) is processed by an LLM to:
+        *   Calculate a **relevance score** (0-9) based on your initial prompt. Papers below `min_relevance` are filtered out.
+        *   Generate a **review** focused on how the paper addresses your prompt.
+        *   Calculate a **quality score** (0-9) based on this review. Papers below `min_quality` are filtered out.
+        *   Generate a **summary** tailored to your prompt.
+    *   A **total score** is calculated based on relevance and quality.
+6.  **Report Generation**:
+    *   The top `k` papers (sorted by total score) are selected.
+    *   An LLM generates an overall summary of these selected papers in context of your prompt.
+    *   A final PDF report is created, including the overall summary, and for each paper: its title, metadata, scores, and individual summary.
 
 ## Installation
 
-### Install uv for python package management
+### Prerequisites
 
-Install uv, see [Guide](https://docs.astral.sh/uv/getting-started/installation/)
+*   Python 3.12 or higher.
+*   `uv`: A fast Python package installer and resolver. Install `uv` by following the [Official Guide](https://docs.astral.sh/uv/getting-started/installation/).
+    *   If you have Homebrew on macOS: `brew install uv`
 
-If you have homebrew in a mac installed you can just do `$ brew install uv`
+### Setup
 
-### Install python packages
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your_username/lanternfish.git # Replace with actual repo URL
+    cd lanternfish
+    ```
 
-`$ uv sync`
+2.  **Install Python packages**:
+    This command installs all necessary dependencies defined in `pyproject.toml` into a virtual environment managed by `uv`.
+    ```bash
+    uv sync
+    ```
+
+## Configuration (Environment Variables)
+
+LanternFish uses environment variables to configure the LLM connection. You can set these by creating a `.env` file in the project root or by using one of the provided templates. The `run_lanternfish.sh` script uses `.env_ollama` by default.
+
+### Provided `.env` templates:
+
+*   **`.env_ollama`**:
+    *   Configures LanternFish to use a **locally running Ollama server** that you manage separately.
+    *   Example content:
+        ```ini
+        LLM_SERVER_IP="127.0.0.1"
+        LLM_SERVER_PORT="11434"
+        LLM_MODEL_NAME="gemma3:4b" # Or your preferred Ollama model
+        OPENAI_API_KEY="NONE"      # Not used for Ollama
+        USE_LOCAL_OLLAMA=true
+        ```
+    *   Ensure your Ollama server is running on the specified IP and port and has the `LLM_MODEL_NAME` model pulled (`ollama pull gemma3:4b`).
+
+*   **`.env_start_ollama`**:
+    *   Configures LanternFish to **start and manage its own local Ollama server instance** when the script runs, and stop it on exit. This is useful for a self-contained setup.
+    *   Example content:
+        ```ini
+        LLM_SERVER_IP="127.0.0.1"
+        LLM_SERVER_PORT="11435"     # Uses a different port by default
+        LLM_MODEL_NAME="gemma3:4b"
+        OPENAI_API_KEY="NONE"
+        START_LOCAL_OLLAMA=true     # Key flag to enable auto-start
+        ```
+    *   The script will attempt to pull the `LLM_MODEL_NAME` if not already available to this auto-started Ollama instance.
+
+### Key Environment Variables:
+
+*   `LLM_SERVER_IP`: IP address of the LLM server (e.g., "127.0.0.1" for local Ollama).
+*   `LLM_SERVER_PORT`: Port of the LLM server (e.g., "11434" for Ollama).
+*   `LLM_MODEL_NAME`: The name of the LLM model to use (e.g., "gemma3:4b", "gpt-4o").
+*   `OPENAI_API_KEY`: Your OpenAI API key if using OpenAI services. Set to "NONE" or leave blank if using Ollama or another local LLM.
+*   `USE_LOCAL_OLLAMA`: Set to `true` if connecting to a local Ollama server (used by `.env_ollama`).
+*   `START_LOCAL_OLLAMA`: Set to `true` to have LanternFish attempt to start its own Ollama instance (used by `.env_start_ollama`).
+*   `CLI_MODEL_NAME`: (Optional) If `run_lanternfish.sh` is used with the `-m` or `--model` flag, this variable is set internally and overrides `LLM_MODEL_NAME` from the `.env` file.
+
+To use a different LLM provider (e.g., OpenAI):
+1.  Copy `.env_ollama` to a new file, e.g., `.env_openai`.
+2.  Modify `.env_openai`:
+    ```ini
+    # LLM_SERVER_IP and LLM_SERVER_PORT might not be needed or could point to a proxy
+    LLM_MODEL_NAME="gpt-4o"  # Your desired OpenAI model
+    OPENAI_API_KEY="your_openai_api_key_here"
+    # USE_LOCAL_OLLAMA=false # or remove this line
+    # START_LOCAL_OLLAMA=false # or remove this line
+    ```
+3.  Run the application specifying this new env file:
+    ```bash
+    uv run --env-file .env_openai lanternfish/__main__.py -p "Your research prompt"
+    ```
 
 ## Usage
 
-To run any python file with the dependencies installed:
+The primary way to run LanternFish is using the `run_lanternfish.sh` script, which handles environment setup and passes arguments to the main application.
 
-`$ uv run --env-file .env_ollama lanternfish/llm_client.py`
+### Using `run_lanternfish.sh` (Recommended)
 
-## Add dependencies
+This script uses the `.env_ollama` file by default.
 
-Instead of doing `pip install XXX` do `uv add XXX` and the dependencies are added and installed in the venv managed by uv. 
+```bash
+./run_lanternfish.sh -p "Find recent papers on multimodal LLMs for document understanding"
+```
 
-## How it Works
-See report for more information on how Lanternfish works.
+You can specify a different Ollama model using the -m or --model flag with the script:
+
+```bash
+./run_lanternfish.sh -m "mistral:latest" -p "Latest advancements in quantum error correction"
+```
+
+
+### Running __main__.py directly with uv run
+
+You can also run the main application script directly. Make sure to specify an environment file.
+
+```bash
+uv run --env-file .env_ollama lanternfish/__main__.py -p "Your research prompt"
+```
+
+If using an environment file like .env_start_ollama that starts its own server:
+
+```bash
+uv run --env-file .env_start_ollama lanternfish/__main__.py -p "Your research prompt"
+```
+
+
+Command-Line Arguments for lanternfish:
+
+```bash
+    -p, --prompt TEXT: Required. Description of what you want to find in the research literature.
+        Example: "Find recent papers using LLMs to help with cancer screening."
+
+    -m, --model TEXT: The Ollama model (or other compatible model name) to use.
+        Default: gemma3:4b.
+        Note: If using run_lanternfish.sh with its -m flag, that value takes precedence.
+
+    -k, --top_k INTEGER: The maximal number of papers to include in the final report.
+        Default: 5.
+
+    -r, --min_relevance FLOAT: The minimal relevance score (0-9, can be float like 0.7 then internally scaled or interpreted by LLM) for a paper to be considered.
+        Default: 0.7.
+
+    -l, --max_paper_length INTEGER: The maximum number of characters of a paper's Markdown content to be sent to the LLM for analysis.
+        Default: 50000.
+
+    -q, --min_quality FLOAT: The minimal quality score (0-9) for a paper to be considered.
+        Default: 0.7.
+
+    --max_papers_evaluated INTEGER: The maximal number of papers retrieved from Google Scholar for further evaluation.
+        Default: 5.
+
+    --n_samples_score INTEGER: Number of times to sample from the LLM when computing relevance and quality scores. The final score is averaged.
+        Default: 1.
+```
+
+
+## Output
+
+Downloaded PDFs: Stored in lanternfish/papers/.
+
+Converted Markdown: Stored in lanternfish/converted_papers/, with each paper in its own subdirectory containing output.md and a figures/ folder.
+
+Final Report: A PDF file named lanternfish_report_[timestamp].pdf (e.g., lanternfish_report_2023-10-27_14-30-00.pdf) is generated in the project's root directory. This report contains summaries and scored papers.
+
+## Development
+### Adding Dependencies
+
+Instead of `pip install XXX`, use `uv add XXX`. This will add the dependency to pyproject.toml and install it in the uv-managed virtual environment.
+
+```bash
+uv add new_package_name
+```
+
+## Future Work / To-Do
+
+- Refine LLM-based filtering of papers based on abstracts before full download and conversion.
+- Fine-tune a model specifically for paper review generation.
+- Implement more sophisticated score calculation (e.g., using token logits for confidence).
+- Add a web interface for easier interaction.
+- Enable interactive Q&A with the LLM about the collected papers.
+- Improve PDF parsing and figure/table extraction.
 
