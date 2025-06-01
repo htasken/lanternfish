@@ -45,7 +45,7 @@ def search(prompt, max_n_papers=50):
         new_prompt = f"Description of the papers I want to find: {prompt}\n\nPrevious search queries that have missed some papers:\n"
         for query in search_queries:
             new_prompt += f"- {query}\n"
-        new_prompt += "Please generate a new search query that will find more relevant papers."
+        new_prompt += "Please generate a new search query that will find more relevant papers. Consider making the search less specific potentially with fewer ANDs and more ORs."
         search_queries.append(generate_search_prompts(new_prompt))
 
     logging_info_queries = "Search queries generated:\n"
