@@ -24,7 +24,7 @@ def generate_report(prompt, papers, top_k, report_name=None):
     
     summary_overall = generate_summary_overall(prompt, papers)
 
-    report_markdown = f"# [{title}\n\n"
+    report_markdown = f"# {title}\n\n"
 
     report_markdown += f"*Prompt: {prompt}* <br>\n"
     n_papers = len(papers)
