@@ -78,7 +78,7 @@ def main(args=None):
             continue
 
         # Calc total score
-        paper["total score"] = math.sqrt(paper["relevance score"]*paper["quality score"])
+        paper["total score"] = round(math.sqrt(paper["relevance score"] * paper["quality score"]), 1)
 
         # Produce summaries of the papers with respect to the prompt
         summary = llm_api.generate_summary(args.prompt, markdown_text)
