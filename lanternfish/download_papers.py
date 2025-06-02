@@ -169,7 +169,7 @@ def download_papers(papers, folder="lanternfish/papers", verbose=False):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    print("Downloading papers")
+    print("Downloading papers...")
 
     for i, paper in enumerate(papers):
         if verbose:

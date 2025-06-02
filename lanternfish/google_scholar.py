@@ -58,6 +58,8 @@ def search(prompt, max_n_papers=50):
         "pdf path": None,
         "url": None,
         "markdown path": None,
+        "review relevancy": None,
+        "review quality": None,
         "relevancy score": None,
         "quality score": None,
         "total score": None,

@@ -3,7 +3,7 @@
 """Lanternfish command line tool's entry point."""
 
 import logging
-logging.basicConfig(level=logging.INFO) # For debugging purposes
+logging.basicConfig(level=logging.WARNING) # For debugging purposes
 
 import llm_api
 import google_scholar
@@ -24,13 +24,13 @@ def command_line_arguments(args=None):
         help="The Ollama model to use for the LLM. Default is 'gemma3:4b'. See https://ollama.com/models for more models. Quantized models are also available.")
     parser.add_argument('-k', '--top_k', default=5, type=int,
         help="The maximal number of papers included in report. Default is 5.")
-    parser.add_argument('-r', '--min_relevance', default=0.7, type=float, 
-        help="The minimal relevance score of the papers. Default is 0.7.")    
+    parser.add_argument('-r', '--min_relevance', default=0.6, type=float, 
+        help="The minimal relevance score of the papers. Default is 0.6.")    
     parser.add_argument('-l', '--max_paper_length', default=50000, type=int, 
         help="The maximum number of characters of a paper that should be concerned.")
-    parser.add_argument('-q', '--min_quality', default=0.7, type=float, 
-        help="The minimal quality score of the papers. Default is 0.7.")
-    parser.add_argument('--max_papers_evaluated', default=5, type=int,
+    parser.add_argument('-q', '--min_quality', default=0.6, type=float, 
+        help="The minimal quality score of the papers. Default is 0.6.")
+    parser.add_argument('--max_papers_evaluated', default=50, type=int,
         help="The maximal number of returned from google scholar search for further evaluation. Default is 50.")
     parser.add_argument('--n_samples_score', default=1, type=int,
         help="Number of times to sample from the LLM when computing relevance and quality scores. The final score is averaged. Default is 1.")
@@ -43,6 +43,8 @@ def main(args=None):
     # Parse command line arguments
     args = command_line_arguments(args)
 
+    print("This may take quite some time, please be patient...")
+
     # Generate search terms and search Google Scholar for papers
     papers = google_scholar.search(args.prompt, args.max_papers_evaluated) 
 
@@ -51,30 +53,30 @@ def main(args=None):
     
     # Convert PDFs to markdown with LaTeX for equations
     papers = pdf_to_markdown.convert_all(papers)
-
     
+    print("Reviewing, scoring and summarizing the papers...") 
     for paper in papers:
         with open(paper["markdown path"], "r", encoding="utf-8") as f:
             markdown_text = f.read()
-            
         
         # Truncate the paper text at max_paper_length
-        markdown_text= markdown_text[:args.max_paper_length]
-
-        # Get relevance score of the full paper
-        rel_score = asyncio.run(llm_api.generate_score(args.prompt, markdown_text, n_samples = args.n_samples_score, type = "relevance"))
-        paper["relevance score"] = rel_score
-        if rel_score < args.min_relevance:
-            continue
-
+        markdown_text = markdown_text[:args.max_paper_length]
         paper["markdown_text"] = markdown_text
 
-        paper["review"] = llm_api.generate_review(args.prompt,markdown_text)
+        # Review the relevancy of the paper the with respect to the prompt
+        paper["review relevancy"] = llm_api.generate_review_relevancy(args.prompt, markdown_text)
+
+        # Get relevance score of the full paper
+        paper["relevance score"] = asyncio.run(llm_api.generate_score(args.prompt, paper["review relevancy"], n_samples = args.n_samples_score, type = "relevance"))
+        if paper["relevance score"] < args.min_relevance:
+            continue
+
+        # Review the quality of the paper (normal review)
+        paper["review quality"] = llm_api.generate_review_quality(markdown_text)
 
         # Get quality score
-        qual_score = asyncio.run(llm_api.generate_score(args.prompt, paper["review"], n_samples = args.n_samples_score, type = "quality"))
-        paper["quality score"] = qual_score
-        if qual_score < args.min_quality:
+        paper["quality score"] = asyncio.run(llm_api.generate_score(args.prompt, paper["review quality"], n_samples = args.n_samples_score, type = "quality"))
+        if paper["quality score"] < args.min_quality:
             continue
 
         # Calc total score

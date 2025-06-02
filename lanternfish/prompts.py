@@ -29,7 +29,7 @@ Do not explain your answer.
 IMPORTANT: Return the score in JSON format. Remember: The score MUST be an integer between 0 and 9.
 """
 
-def system_generate_review(prompt):
+def system_generate_review_relevancy(prompt):
     
     return f"""
     You review a papers relevance according to a research question by a user.
@@ -43,6 +43,37 @@ def system_generate_review(prompt):
     
     User question: {prompt}
     """
+
+SYSTEM_GENERATE_REVIEW_QUALITY = """
+You are a scientific article reviewer in a top journal that have open review in the format given in the example below.
+
+Example Review:
+
+Official Review of Paper 
+Summary:
+The method augments rehearsal-based methods for continual learning. At the heart of the method is a measurement of the influence of each example on the stability and the plasticity of the algorithm. First, the authors introduce a method for estimating said influence. Second, they present a method for using the influence to regularise the parameter updates. Third, they show how to use the influence in order to select which examples of past tasks to store in memory.
+
+Strengths And Weaknesses:
+The paper introduced an interesting direction of combining research on Example Influence with Continual Learning. It appears that the methods they introduce are novel and well motivated. Finally, the experiments show good improvement over the many rehearsal-based baselines.
+
+However, I feel that the paper’s presentation can benefit from another iteration. There are many sentences which need to be improved and that at the moment hinder the readability of the paper. E.g. lines 44, 52, 190, and 203. Moreover, I was not left with the impression that the presentation of the background material, in particular on influence functions, was satisfactory. For instance, I am confused by eq. (6) and the use of iff. Apart from the presentation, it’d be good if the experiments also introduced baselines which represent other CL directions, s.a. regularisation-based methods.
+
+Questions:
+Do you anticipate that your method would work on sequences of tasks with different input domains? For instance, if you had FMNIST classification mixed with CIFAR10.
+
+Limitations:
+I did not see a discussion on the limitations of the method. I’d be curious to better understand the number of tasks the method can handle before it breaks, possibly as a function of the memory size.
+
+Ethics Flag: No
+Soundness: 3 good
+Presentation: 2 fair
+Contribution: 3 good
+Rating: 6: Weak Accept: Technically solid, moderate-to-high impact paper, with no major concerns with respect to evaluation, resources, reproducibility, ethical considerations.
+Confidence: 3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+
+User gives is the paper you need to review:
+"""
 
 SYSTEM_GENERATE_SUMMARY = """
 You are an expert academic assistant specializing in summarizing research papers for a research-savvy audience.

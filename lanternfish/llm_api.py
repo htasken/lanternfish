@@ -1,7 +1,7 @@
 from llm_client import AsyncLLMClient
 import asyncio
 
-from prompts import SYSTEM_GENERATE_QUERY, SYSTEM_GENERATE_RELEVANCE_SCORE, SYSTEM_GENERATE_QUALITY_SCORE, SYSTEM_GENERATE_SUMMARY, SYSTEM_GENERATE_TITLE, system_generate_review
+from prompts import SYSTEM_GENERATE_QUERY, SYSTEM_GENERATE_RELEVANCE_SCORE, SYSTEM_GENERATE_QUALITY_SCORE, SYSTEM_GENERATE_SUMMARY, SYSTEM_GENERATE_TITLE, SYSTEM_GENERATE_REVIEW_QUALITY, system_generate_review_relevancy
 import logging
 from pydantic import BaseModel
 
@@ -42,7 +42,7 @@ async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance")
     """
 
     if type == "relevance":
-        complete_prompt = f"User prompt:\n{user_prompt}\n\nPaper:\n{paper_info}"
+        complete_prompt = f"User prompt:\n{user_prompt}\n\nReview:\n{paper_info}"
         system_message = SYSTEM_GENERATE_RELEVANCE_SCORE
     elif type == "quality":
         complete_prompt = f"Review: {paper_info}"
@@ -77,7 +77,7 @@ async def generate_score(user_prompt, paper_info, n_samples=1, type="relevance")
                 print(f"Invalid score (non-integer): {response}")
 
     if not scores:
-        raise ValueError("No valid scores returned by the LLM.")
+        raise ValueError("No valid scores returned by the LLM. Remember to set a sufficient context length.")
 
     return sum(scores) / len(scores)
 
@@ -113,17 +113,27 @@ def generate_summary(user_prompt, paper_latex, verbose=False):
 
     return summary
 
-def generate_review(user_prompt, paper_text):
+def generate_review_relevancy(user_prompt, paper_text):
     
-            
     review = asyncio.run(llm_client.get_completion(
         paper_text,
-        system_message=system_generate_review(user_prompt),
+        system_message=system_generate_review_relevancy(user_prompt),
+    ))
+    
+    logging.info("Review of relevancy generated")
+    logging.debug(f"Review relevancy content: {review}")
+    
+    return review
+
+def generate_review_quality(paper_text):
+    
+    review = asyncio.run(llm_client.get_completion(
+        paper_text,
+        system_message=SYSTEM_GENERATE_REVIEW_QUALITY,
     ))
     
     logging.info("Review generated")
-    
-    # print(review)
+    logging.debug(f"Review quality content: {review}")
     
     return review
 
