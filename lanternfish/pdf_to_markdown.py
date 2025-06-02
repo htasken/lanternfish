@@ -2,9 +2,11 @@ from pix2text import Pix2Text
 import multiprocessing
 import functools
 import os
-from common import clear_folder
+import sys
+import logging
+from contextlib import redirect_stdout, redirect_stderr
 
-def convert_all(papers, output_dir="lanternfish/converted_papers", processes=10):
+def convert_all(papers, output_dir="lanternfish/converted_papers", processes=10, silent=True):
     """
     Convert a list of PDF files to markdown with equations in latex and saves
     the files in 'output_dir'.
@@ -17,6 +19,7 @@ def convert_all(papers, output_dir="lanternfish/converted_papers", processes=10)
     Returns:
         list: Paths to converted files.
     """
+    print("Converting PDFs of papers to markdown...")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -35,10 +38,18 @@ def convert_all(papers, output_dir="lanternfish/converted_papers", processes=10)
             paths_pdf_to_convert.append(path_pdf)
 
     with multiprocessing.Pool(processes=processes) as pool:
-        convert_func = functools.partial(convert, output_dir=output_dir)
+        if silent:
+            convert_func = functools.partial(silent_convert, output_dir=output_dir)
+        else:
+            convert_func = functools.partial(convert, output_dir=output_dir)
         pool.map(convert_func, paths_pdf_to_convert)
     
     return papers_converted
+
+def silent_convert(args, output_dir):
+    with open(os.devnull, 'w') as fnull:
+        with redirect_stdout(fnull), redirect_stderr(fnull):
+            return convert(args, output_dir)
 
 def convert(path_pdf, output_dir="lanternfish/converted_papers"):
     """
